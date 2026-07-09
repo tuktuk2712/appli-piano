@@ -20,7 +20,11 @@ export function attachTouchKeys(
 
   const down = (e: PointerEvent): void => {
     e.preventDefault();
-    canvas.setPointerCapture(e.pointerId);
+    try {
+      canvas.setPointerCapture(e.pointerId);
+    } catch {
+      // les événements synthétiques (tests) n'ont pas toujours de pointerId valide
+    }
     const { x, y } = toLocal(e);
     const midi = keyboard.midiAtPoint(x, y);
     if (midi === null) return;

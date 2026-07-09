@@ -16,8 +16,10 @@ export class SheetView {
   async load(container: HTMLElement, song: Song): Promise<void> {
     if (!song.musicXml) throw new Error('Pas de partition pour ce morceau');
     this.container = container;
-    container.innerHTML = '<div class="muted" style="padding:16px">Rendu de la partition…</div>';
+    container.innerHTML = '';
     const host = document.createElement('div');
+    host.style.width = '100%';
+    container.appendChild(host); // OSMD a besoin d'un conteneur attaché pour mesurer la largeur
 
     this.osmd = new OpenSheetMusicDisplay(host, {
       autoResize: false,
@@ -31,8 +33,6 @@ export class SheetView {
     await this.osmd.load(song.musicXml);
     this.osmd.Zoom = container.clientWidth < 560 ? 0.62 : 0.85;
     this.osmd.render();
-    container.innerHTML = '';
-    container.appendChild(host);
 
     // Table temps -> pas de curseur (le curseur OSMD avance en horodatage musical)
     const cursor = this.osmd.cursor;
