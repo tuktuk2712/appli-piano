@@ -1,0 +1,86 @@
+[
+  {
+    "id": "au-clair-de-la-lune",
+    "title": "Au clair de la lune",
+    "composer": "Traditionnel",
+    "level": 1,
+    "file": "au-clair-de-la-lune.musicxml"
+  },
+  {
+    "id": "frere-jacques",
+    "title": "Frère Jacques",
+    "composer": "Traditionnel",
+    "level": 1,
+    "file": "frere-jacques.musicxml"
+  },
+  {
+    "id": "ode-a-la-joie",
+    "title": "Ode à la joie",
+    "composer": "L. van Beethoven",
+    "level": 1,
+    "file": "ode-a-la-joie.musicxml"
+  },
+  {
+    "id": "twinkle-twinkle",
+    "title": "Ah ! vous dirai-je, maman",
+    "composer": "Traditionnel (Mozart)",
+    "level": 1,
+    "file": "twinkle-twinkle.musicxml"
+  },
+  {
+    "id": "hot-cross-buns",
+    "title": "Hot Cross Buns",
+    "composer": "Traditionnel",
+    "level": 1,
+    "file": "hot-cross-buns.musicxml"
+  },
+  {
+    "id": "mary-had-a-little-lamb",
+    "title": "Mary Had a Little Lamb",
+    "composer": "Traditionnel",
+    "level": 1,
+    "file": "mary-had-a-little-lamb.musicxml"
+  },
+  {
+    "id": "london-bridge",
+    "title": "London Bridge",
+    "composer": "Traditionnel",
+    "level": 1,
+    "file": "london-bridge.musicxml"
+  },
+  {
+    "id": "vive-le-vent",
+    "title": "Vive le vent (Jingle Bells)",
+    "composer": "J. Pierpont",
+    "level": 1,
+    "file": "vive-le-vent.musicxml"
+  },
+  {
+    "id": "exercice-cinq-doigts",
+    "title": "Exercice 5 doigts en Do",
+    "composer": "Exercice",
+    "level": 1,
+    "file": "exercice-cinq-doigts.musicxml"
+  },
+  {
+    "id": "happy-birthday",
+    "title": "Joyeux anniversaire",
+    "composer": "Traditionnel",
+    "level": 1,
+    "file": "happy-birthday.musicxml"
+  },
+  {
+    "id": "fur-elise",
+    "title": "La Lettre à Élise (thème)",
+    "composer": "L. van Beethoven",
+    "level": 2,
+    "file": "fur-elise.musicxml"
+  },
+  {
+    "id": "gymnopedie-1",
+    "title": "Gymnopédie n°1 (extrait)",
+    "composer": "E. Satie",
+    "level": 3,
+    "file": "gymnopedie-1.musicxml"
+  }
+]

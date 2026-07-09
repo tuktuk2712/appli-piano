@@ -95,6 +95,15 @@ button.btn:disabled { opacity: 0.5; }
 
 input[type='range'] { accent-color: var(--accent); }
 
+.song-card { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+.song-card:active { background: var(--bg-3); }
+.song-info { flex: 1; min-width: 0; }
+.song-title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.song-sub { color: var(--text-dim); font-size: 0.8rem; }
+.song-stars { color: var(--gold); font-size: 0.9rem; letter-spacing: 2px; }
+.song-stars .off { color: #3a4356; }
+.song-del { background: none; border: none; color: var(--text-dim); font-size: 1.1rem; cursor: pointer; padding: 8px; }
+
 .toast {
   position: fixed;
   bottom: calc(var(--nav-h) + 12px);

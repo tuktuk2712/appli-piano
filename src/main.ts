@@ -1,19 +1,16 @@
 import './styles.css';
 import { registerScreen, startRouter, navigate } from './ui/router';
+import { renderHome } from './ui/screens/home';
 import { renderFreePlay } from './ui/screens/free-play';
 import { renderLearnScreen } from './ui/screens/learn';
+import { renderLessons } from './ui/screens/lessons';
+import { renderSettings } from './ui/screens/settings';
 
-function stub(title: string) {
-  return (el: HTMLElement) => {
-    el.innerHTML = `<div class="screen"><h1>${title}</h1><p class="muted">Bientôt disponible…</p></div>`;
-  };
-}
-
-registerScreen('home', stub('Morceaux'));
+registerScreen('home', renderHome);
 registerScreen('free', renderFreePlay);
 registerScreen('learn', renderLearnScreen);
-registerScreen('lessons', stub('Leçons'));
-registerScreen('settings', stub('Réglages'));
+registerScreen('lessons', renderLessons);
+registerScreen('settings', renderSettings);
 
 document.querySelectorAll<HTMLButtonElement>('#nav button').forEach((b) => {
   b.addEventListener('click', () => navigate(b.dataset.screen!));
