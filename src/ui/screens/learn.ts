@@ -9,7 +9,7 @@ import { midiInput } from '../../input/midi-input';
 import { KeyboardView } from '../keyboard';
 import { attachTouchKeys } from '../../input/touch-keys';
 import { FallingNotesView } from '../falling-notes';
-import { SheetView } from '../sheet-view';
+import type { SheetView } from '../sheet-view';
 import { showResults } from '../results';
 import { navigate } from '../router';
 import { getAudioContext } from '../../audio/context';
@@ -342,21 +342,21 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
         });
     });
 
+    async function openSheet(): Promise<void> {
+      if (sheetView || !song.musicXml) return;
+      const { SheetView } = await import('../sheet-view'); // OSMD chargé à la demande (~1 Mo)
+      sheetView = new SheetView();
+      await sheetView.load($('#ln-sheet'), song);
+    }
     $('#ln-mode').addEventListener('click', function (this: HTMLElement) {
       mode = mode === 'fall' ? 'sheet' : 'fall';
       this.textContent = mode === 'fall' ? '𝄞 Partition' : '▦ Cascade';
       $('#ln-fall').hidden = mode === 'sheet';
       $('#ln-sheet').hidden = mode === 'fall';
       if (mode === 'fall') fallView.layout();
-      else if (!sheetView && song.musicXml) {
-        sheetView = new SheetView();
-        void sheetView.load($('#ln-sheet'), song);
-      }
+      else void openSheet();
     });
-    if (mode === 'sheet' && song.musicXml) {
-      sheetView = new SheetView();
-      void sheetView.load($('#ln-sheet'), song);
-    }
+    if (mode === 'sheet') void openSheet();
 
     function restartFrom(t: number): void {
       matcher.reset();
