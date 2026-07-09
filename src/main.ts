@@ -1,6 +1,7 @@
 import './styles.css';
 import { registerScreen, startRouter, navigate } from './ui/router';
 import { renderFreePlay } from './ui/screens/free-play';
+import { renderLearnScreen } from './ui/screens/learn';
 
 function stub(title: string) {
   return (el: HTMLElement) => {
@@ -10,6 +11,7 @@ function stub(title: string) {
 
 registerScreen('home', stub('Morceaux'));
 registerScreen('free', renderFreePlay);
+registerScreen('learn', renderLearnScreen);
 registerScreen('lessons', stub('Leçons'));
 registerScreen('settings', stub('Réglages'));
 

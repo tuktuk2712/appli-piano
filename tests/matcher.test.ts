@@ -45,6 +45,14 @@ describe('NoteMatcher', () => {
     expect(m.playerNote(60, 1.6)!.judgement).toBe('wrong');
   });
 
+  it('expectedMidis reflète les notes en attente, dédupliquées', () => {
+    const m = new NoteMatcher({});
+    m.expect([n(60, 1.0), n(60, 1.0), n(64, 1.0)], 1.0);
+    expect(m.expectedMidis().sort()).toEqual([60, 64]);
+    m.playerNote(64, 1.0);
+    expect(m.expectedMidis()).toEqual([60]);
+  });
+
   it('note jouée sans rien d attendu = wrong', () => {
     const m = new NoteMatcher({});
     expect(m.playerNote(60, 0.5)!.judgement).toBe('wrong');

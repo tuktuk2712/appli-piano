@@ -72,6 +72,11 @@ export class NoteMatcher {
     return out;
   }
 
+  /** Midis actuellement attendus (pour cibler la détection micro). */
+  expectedMidis(): number[] {
+    return [...new Set(this.pending.map((p) => p.note.midi))];
+  }
+
   reset(): void {
     this.pending = [];
     this._stats = { perfect: 0, good: 0, miss: 0, wrong: 0 };
