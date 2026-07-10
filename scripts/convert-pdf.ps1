@@ -43,7 +43,12 @@ $item = Get-Item $Chemin
 $pdfs = if ($item.PSIsContainer) { Get-ChildItem $item.FullName -Filter *.pdf } else { @($item) }
 if ($pdfs.Count -eq 0) { Write-Host "Aucun PDF trouvé dans $Chemin" -ForegroundColor Red; exit 1 }
 
-$outDir = Join-Path (Split-Path $pdfs[0].FullName -Parent) 'converties'
+# Sortie dans OneDrive si disponible : les fichiers apparaissent automatiquement sur le téléphone
+if ($env:OneDrive -and (Test-Path $env:OneDrive)) {
+  $outDir = Join-Path $env:OneDrive 'Partitions Piano'
+} else {
+  $outDir = Join-Path (Split-Path $pdfs[0].FullName -Parent) 'converties'
+}
 New-Item -ItemType Directory -Force $outDir | Out-Null
 
 function Convert-One([System.IO.FileInfo]$pdf, [string]$outDir, [string]$audiveris) {
@@ -77,5 +82,10 @@ foreach ($pdf in $pdfs) {
 
 Write-Host ""
 Write-Host "$ok/$($pdfs.Count) PDF convertis dans : $outDir" -ForegroundColor Green
-Write-Host "Importe les .mxl dans Piano Studio : Morceaux -> Importer un fichier."
-Write-Host "(Envoie-les d'abord sur ton téléphone : Google Drive, mail, câble...)"
+if ($outDir -like "$env:OneDrive*") {
+  Write-Host "OneDrive synchronise ce dossier : sur ton téléphone, ouvre l'app OneDrive ->"
+  Write-Host "'Partitions Piano' -> Partager le fichier -> Piano Studio (import direct)."
+} else {
+  Write-Host "Importe les .mxl dans Piano Studio : Morceaux -> Importer un fichier."
+  Write-Host "(Envoie-les d'abord sur ton téléphone : Google Drive, mail, câble...)"
+}

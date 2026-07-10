@@ -13,6 +13,18 @@ const LEVEL_LABELS: Record<number, string> = {
   3: '🌳 Intermédiaire',
 };
 
+/** Récupère un fichier arrivé via « Partager → Piano Studio » (déposé par le service worker). */
+async function pickupSharedFile(): Promise<Song | null> {
+  if (!('caches' in window)) return null;
+  const cache = await caches.open('shared-files');
+  const res = await cache.match('/__shared-file');
+  if (!res) return null;
+  await cache.delete('/__shared-file');
+  const name = decodeURIComponent(res.headers.get('X-File-Name') ?? 'partage.mxl');
+  const blob = await res.blob();
+  return importFile(new File([blob], name));
+}
+
 export function renderHome(el: HTMLElement): () => void {
   let disposed = false;
   el.innerHTML = `
@@ -125,6 +137,16 @@ export function renderHome(el: HTMLElement): () => void {
     .catch(() => (userList.innerHTML = ''));
 
   search.addEventListener('input', renderList);
+
+  // Fichier partagé depuis une autre app Android (OneDrive, Fichiers…)
+  pickupSharedFile()
+    .then(async (song) => {
+      if (!song || disposed) return;
+      await saveUserSong(song);
+      toast(`🎵 « ${song.title} » importé !`);
+      navigate('learn', { id: song.id });
+    })
+    .catch(() => toast('❌ Fichier partagé illisible (formats : .mid, .musicxml, .mxl)', 4000));
 
   // Bandeau d'installation PWA (visible seulement si Chrome propose l'installation)
   const installCard = el.querySelector<HTMLElement>('#hm-install')!;
