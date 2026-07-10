@@ -22,6 +22,7 @@ export class KeyboardView {
   noteNames: 'fr' | 'en' | 'off';
   private keys: KeyLayout[] = [];
   private pressed = new Map<number, string>();
+  private highlights = new Map<number, string>(); // notes en cours (illumination), sous les pressed
   private cssW = 0;
   private cssH = 0;
 
@@ -98,6 +99,15 @@ export class KeyboardView {
     this.pressed.clear();
   }
 
+  setHighlight(midi: number, color: string | null): void {
+    if (color) this.highlights.set(midi, color);
+    else this.highlights.delete(midi);
+  }
+
+  clearHighlights(): void {
+    this.highlights.clear();
+  }
+
   draw(): void {
     const ctx = this.ctx;
     const h = this.cssH;
@@ -105,7 +115,7 @@ export class KeyboardView {
 
     for (const k of this.keys) {
       if (k.black) continue;
-      const color = this.pressed.get(k.midi);
+      const color = this.pressed.get(k.midi) ?? this.highlights.get(k.midi);
       ctx.fillStyle = color ?? '#f2f4f8';
       ctx.strokeStyle = '#1a1f28';
       roundRect(ctx, k.x + 0.5, 0, k.w - 1, h - 1, [0, 0, 5, 5]);
@@ -122,7 +132,7 @@ export class KeyboardView {
     const blackH = h * 0.62;
     for (const k of this.keys) {
       if (!k.black) continue;
-      const color = this.pressed.get(k.midi);
+      const color = this.pressed.get(k.midi) ?? this.highlights.get(k.midi);
       ctx.fillStyle = color ?? '#12151c';
       roundRect(ctx, k.x, 0, k.w, blackH, [0, 0, 4, 4]);
       ctx.fill();

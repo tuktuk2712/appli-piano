@@ -1,5 +1,5 @@
 import { getSongById } from '../../data/library';
-import { midiRange, type Song, type SongNote } from '../../core/song';
+import { midiRange, notesInWindow, type Song, type SongNote } from '../../core/song';
 import { PlaybackScheduler } from '../../core/scheduler';
 import { NoteMatcher, type NoteJudgement } from '../../core/matcher';
 import { progressStore } from '../../core/progress';
@@ -52,10 +52,18 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
     const settings = progressStore.getSettings();
     host.innerHTML = `
       <div class="learn-wrap">
-        <div class="learn-top">
+        <div class="learn-controls">
           <button class="btn ghost" id="ln-back">←</button>
-          <div class="learn-title">${escapeHtml(song.title)}</div>
-          <button class="btn ghost" id="ln-mode" ${song.musicXml ? '' : 'hidden'}>${mode === 'fall' ? '𝄞 Partition' : '▦ Cascade'}</button>
+          <button class="btn" id="ln-play">▶</button>
+          <button class="btn ghost" id="ln-listen" title="Écouter le morceau en entier">🎧 Écouter</button>
+          <button class="btn ghost" id="ln-tempo">⏱ 100%</button>
+          <button class="btn ghost active" id="ln-wait">✋ Attente</button>
+          <button class="btn ghost" id="ln-hands">🙌 2 mains</button>
+          <button class="btn ghost" id="ln-loop">🔁 A-B</button>
+          <button class="btn ghost" id="ln-metro">🕰</button>
+          <button class="btn ghost" id="ln-mic">🎤</button>
+          <button class="btn ghost" id="ln-mode" ${song.musicXml ? '' : 'hidden'}>${mode === 'fall' ? '𝄞' : '▦'}</button>
+          <span class="learn-title">${escapeHtml(song.title)}</span>
         </div>
         <input type="range" id="ln-seek" min="0" max="${song.duration}" step="0.1" value="0" />
         <div class="learn-stage">
@@ -63,27 +71,22 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
           <div id="ln-sheet" class="sheet-host" ${mode === 'fall' ? 'hidden' : ''}></div>
           <div id="ln-banner" class="learn-banner" hidden></div>
         </div>
-        <div class="learn-controls">
-          <button class="btn" id="ln-play">▶</button>
-          <button class="btn ghost" id="ln-listen">🎧 Écouter</button>
-          <button class="btn ghost" id="ln-tempo">⏱ 100%</button>
-          <button class="btn ghost active" id="ln-wait">✋ Attente</button>
-          <button class="btn ghost" id="ln-hands">🙌 2 mains</button>
-          <button class="btn ghost" id="ln-loop">🔁 A-B</button>
-          <button class="btn ghost" id="ln-metro">🕰</button>
-          <button class="btn ghost" id="ln-mic">🎤</button>
-        </div>
         <canvas id="ln-kbd"></canvas>
       </div>`;
 
     const style = document.createElement('style');
     style.textContent = `
       .learn-wrap { position: absolute; inset: 0; display: flex; flex-direction: column; }
-      .learn-top { display: flex; align-items: center; gap: 8px; padding: 8px 10px 4px; }
-      .learn-top .btn { padding: 7px 12px; font-size: 0.85rem; }
-      .learn-title { flex: 1; text-align: center; font-weight: 700; white-space: nowrap;
-        overflow: hidden; text-overflow: ellipsis; }
-      #ln-seek { width: calc(100% - 20px); margin: 2px 10px; height: 18px; }
+      .learn-controls { display: flex; align-items: center; gap: 5px; padding: 5px 6px 3px; overflow-x: auto;
+        scrollbar-width: none; }
+      .learn-controls::-webkit-scrollbar { display: none; }
+      .learn-controls .btn { padding: 6px 9px; font-size: 0.78rem; white-space: nowrap; flex-shrink: 0;
+        border-radius: 9px; }
+      .learn-controls .btn.active { outline: 2px solid var(--accent); }
+      .learn-title { flex: 1; min-width: 60px; text-align: right; font-weight: 700; font-size: 0.8rem;
+        color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; }
+      #ln-play { min-width: 46px; }
+      #ln-seek { width: calc(100% - 16px); margin: 0 8px; height: 14px; }
       .learn-stage { flex: 1; position: relative; min-height: 0; }
       #ln-fall { position: absolute; inset: 0; width: 100%; height: 100%; }
       .sheet-host { position: absolute; inset: 0; overflow-y: auto; background: #fbfbf6;
@@ -91,11 +94,12 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
       .learn-banner { position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
         background: var(--bg-3); border: 1px solid #333d4d; padding: 8px 16px; border-radius: 999px;
         z-index: 5; font-size: 0.85rem; white-space: nowrap; }
-      .learn-controls { display: flex; gap: 6px; padding: 6px 8px; overflow-x: auto; }
-      .learn-controls .btn { padding: 8px 11px; font-size: 0.8rem; white-space: nowrap; flex-shrink: 0; }
-      .learn-controls .btn.active { outline: 2px solid var(--accent); }
-      #ln-play { min-width: 52px; }
-      #ln-kbd { height: max(20vh, 120px); width: 100%; touch-action: none; }
+      #ln-kbd { height: clamp(110px, 22vh, 190px); width: 100%; touch-action: none; flex-shrink: 0; }
+      @media (max-height: 520px) {
+        #ln-kbd { height: clamp(80px, 26vh, 120px); }
+        .learn-title { display: none; }
+        .learn-controls .btn { padding: 5px 8px; font-size: 0.74rem; }
+      }
     `;
     host.appendChild(style);
 
@@ -121,7 +125,16 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
 
     const kbd = new KeyboardView($('#ln-kbd'), { noteNames: settings.noteNames });
     const [lo, hi] = midiRange(song);
-    kbd.setRange(lo - 2, hi + 2);
+    {
+      // au moins 3 octaves visibles, centrées sur le morceau
+      let from = lo - 3;
+      let to = hi + 3;
+      while (to - from < 36) {
+        if (from > 21) from--;
+        if (to - from < 36 && to < 108) to++;
+      }
+      kbd.setRange(from, to);
+    }
     const fallView = new FallingNotesView($('#ln-fall'), song, kbd);
     let sheetView: SheetView | null = null;
 
@@ -231,6 +244,14 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
         }
       }
 
+      // Illumination des touches : notes en train de sonner (bleu droite, vert gauche)
+      kbd.clearHighlights();
+      for (const n of notesInWindow(song, Math.max(0, t - 12), t + 0.001)) {
+        if (n.time <= t && t < n.time + n.duration) {
+          kbd.setHighlight(n.midi, n.hand === 'left' ? '#3ddc84' : '#4da3ff');
+        }
+      }
+
       if (mode === 'fall') fallView.render(t, judgements, scheduler.waiting);
       else sheetView?.setCursorTime(t);
       kbd.draw();
@@ -267,7 +288,10 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
     $('#ln-listen').addEventListener('click', function (this: HTMLElement) {
       listen = !listen;
       this.classList.toggle('active', listen);
+      // en écoute, le mode attente est suspendu sinon la lecture se fige sur la première note
+      scheduler.setOptions({ waitMode: listen ? false : waitMode });
       restartFrom(scheduler.time);
+      if (listen && !scheduler.isPlaying) setPlaying(true);
     });
 
     $('#ln-tempo').addEventListener('click', function (this: HTMLElement) {
@@ -279,7 +303,7 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
     $('#ln-wait').addEventListener('click', function (this: HTMLElement) {
       waitMode = !waitMode;
       this.classList.toggle('active', waitMode);
-      scheduler.setOptions({ waitMode });
+      scheduler.setOptions({ waitMode: listen ? false : waitMode });
     });
 
     $('#ln-hands').addEventListener('click', function (this: HTMLElement) {
@@ -350,7 +374,7 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
     }
     $('#ln-mode').addEventListener('click', function (this: HTMLElement) {
       mode = mode === 'fall' ? 'sheet' : 'fall';
-      this.textContent = mode === 'fall' ? '𝄞 Partition' : '▦ Cascade';
+      this.textContent = mode === 'fall' ? '𝄞' : '▦';
       $('#ln-fall').hidden = mode === 'sheet';
       $('#ln-sheet').hidden = mode === 'fall';
       if (mode === 'fall') fallView.layout();
