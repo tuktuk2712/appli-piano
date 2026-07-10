@@ -434,11 +434,19 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
           toast(`Mesure ${Math.round(t / measureSeconds(song)) + 1}`);
         });
         sheetView = sv; // assigné seulement une fois complètement chargé (retry possible sinon)
-      } catch {
-        if (!disposedS) {
-          toast('❌ Partition indisponible pour ce morceau');
-          if (mode === 'sheet') $('#ln-mode').click(); // rebascule en cascade
+        sessionStorage.removeItem('sheet-reloaded');
+      } catch (err) {
+        if (disposedS) return;
+        // Chunk périmé après une mise à jour de l'app : un rechargement suffit
+        const stale = err instanceof TypeError || String(err).includes('dynamically imported');
+        if (stale && !sessionStorage.getItem('sheet-reloaded')) {
+          sessionStorage.setItem('sheet-reloaded', '1');
+          toast('🔄 Mise à jour de l’app… rechargement');
+          setTimeout(() => location.reload(), 800);
+          return;
         }
+        toast('❌ Partition indisponible pour ce morceau');
+        if (mode === 'sheet') $('#ln-mode').click(); // rebascule en cascade
       } finally {
         sheetLoading = false;
       }
