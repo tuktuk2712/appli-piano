@@ -12,6 +12,8 @@ export class SheetView {
   private stepIdx = 0;
   private container: HTMLElement | null = null;
   private lastScroll = 0;
+  private measureTimes: number[] = []; // index 0 = mesure 1
+  private measureClickCb: ((time: number) => void) | null = null;
 
   async load(container: HTMLElement, song: Song): Promise<void> {
     if (!song.musicXml) throw new Error('Pas de partition pour ce morceau');
@@ -47,6 +49,55 @@ export class SheetView {
     }
     cursor.reset();
     this.stepIdx = 0;
+
+    // Temps de début de chaque mesure : d'après les notes, sinon au prorata (tempo constant)
+    const measureSec = (song.timeSignature[0] * 60) / song.bpm;
+    const lastMeasure = Math.max(1, ...song.notes.map((n) => n.measure ?? 0), Math.ceil(song.duration / measureSec));
+    this.measureTimes = Array.from({ length: lastMeasure }, (_, i) => i * measureSec);
+    for (const n of song.notes) {
+      if (n.measure && n.time < this.measureTimes[n.measure - 1]) this.measureTimes[n.measure - 1] = n.time;
+    }
+
+    host.addEventListener('click', (e) => this.handleClick(e));
+  }
+
+  onMeasureClick(cb: (time: number) => void): void {
+    this.measureClickCb = cb;
+  }
+
+  /** Tap sur une mesure -> temps de cette mesure (repérage via les boîtes OSMD, en unités * 10 * zoom). */
+  private handleClick(e: MouseEvent): void {
+    if (!this.osmd || !this.measureClickCb) return;
+    const svg = this.container?.querySelector('svg');
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    const unit = 10 * this.osmd.Zoom;
+    const x = (e.clientX - rect.left) / unit;
+    const y = (e.clientY - rect.top) / unit;
+    try {
+      // MeasureList est indexé [mesure][portée]
+      const rows = (this.osmd as unknown as { GraphicSheet: { MeasureList: unknown[][] } }).GraphicSheet.MeasureList;
+      let best: { idx: number; dy: number } | null = null;
+      rows.forEach((row, idx) => {
+        row.forEach((gm) => {
+          const g = gm as {
+            PositionAndShape?: { AbsolutePosition: { x: number; y: number }; Size: { width: number; height: number } };
+          } | null;
+          const box = g?.PositionAndShape;
+          if (!box) return;
+          const inX = x >= box.AbsolutePosition.x && x <= box.AbsolutePosition.x + box.Size.width;
+          if (!inX) return;
+          const dy = Math.abs(y - (box.AbsolutePosition.y + box.Size.height / 2));
+          if (!best || dy < best.dy) best = { idx, dy };
+        });
+      });
+      const hit = best as { idx: number; dy: number } | null;
+      if (hit && hit.dy < 12 && this.measureTimes[hit.idx] !== undefined) {
+        this.measureClickCb(this.measureTimes[hit.idx]);
+      }
+    } catch {
+      // structure interne OSMD indisponible : le clic-mesure est simplement inactif
+    }
   }
 
   setCursorTime(refTime: number): void {

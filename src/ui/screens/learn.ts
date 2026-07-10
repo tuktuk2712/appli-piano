@@ -13,6 +13,7 @@ import type { SheetView } from '../sheet-view';
 import { showResults } from '../results';
 import { navigate } from '../router';
 import { getAudioContext } from '../../audio/context';
+import { HAND_COLORS, BAD_COLOR } from '../colors';
 
 type Hands = 'left' | 'right' | 'both';
 const TEMPO_STEPS = [0.5, 0.75, 1, 1.25, 1.5];
@@ -193,9 +194,9 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
       const ev = matcher.playerNote(midi, scheduler.time - latency);
       if (ev.note) {
         judgements.set(ev.note, ev.judgement);
-        flashKey(midi, '#3ddc84');
+        flashKey(midi, HAND_COLORS[ev.note.hand].main); // touche illuminée à la couleur de la main
       } else {
-        flashKey(midi, '#ff5f6b');
+        flashKey(midi, BAD_COLOR);
       }
       scheduler.satisfy(midi);
     }
@@ -248,7 +249,7 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
       kbd.clearHighlights();
       for (const n of notesInWindow(song, Math.max(0, t - 12), t + 0.001)) {
         if (n.time <= t && t < n.time + n.duration) {
-          kbd.setHighlight(n.midi, n.hand === 'left' ? '#3ddc84' : '#4da3ff');
+          kbd.setHighlight(n.midi, HAND_COLORS[n.hand].main);
         }
       }
 
@@ -371,6 +372,10 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
       const { SheetView } = await import('../sheet-view'); // OSMD chargé à la demande (~1 Mo)
       sheetView = new SheetView();
       await sheetView.load($('#ln-sheet'), song);
+      sheetView.onMeasureClick((t) => {
+        seekTo(t);
+        toast(`Mesure ${Math.round(t / ((song.timeSignature[0] * 60) / song.bpm)) + 1}`);
+      });
     }
     $('#ln-mode').addEventListener('click', function (this: HTMLElement) {
       mode = mode === 'fall' ? 'sheet' : 'fall';
@@ -387,12 +392,57 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
       scheduler.seek(t);
     }
 
-    seekBar.addEventListener('input', () => {
+    function seekTo(t: number): void {
       matcher.reset();
       judgements.clear();
       finished = false;
-      scheduler.seek(Number(seekBar.value));
-    });
+      scheduler.seek(Math.max(0, Math.min(song.duration, t)));
+      seekBar.value = String(scheduler.time);
+    }
+
+    seekBar.addEventListener('input', () => seekTo(Number(seekBar.value)));
+
+    // Cascade : glisser verticalement = avancer/reculer dans le morceau, tap = lecture/pause
+    {
+      const fallCanvas = $<HTMLCanvasElement>('#ln-fall');
+      fallCanvas.style.touchAction = 'none';
+      let drag: { y: number; t: number; playing: boolean } | null = null;
+      let dragged = false;
+      fallCanvas.addEventListener('pointerdown', (e) => {
+        drag = { y: e.clientY, t: scheduler.time, playing: scheduler.isPlaying };
+        dragged = false;
+        try {
+          fallCanvas.setPointerCapture(e.pointerId);
+        } catch {
+          // pointerId synthétique
+        }
+      });
+      fallCanvas.addEventListener('pointermove', (e) => {
+        if (!drag) return;
+        const dy = e.clientY - drag.y;
+        if (!dragged && Math.abs(dy) > 8) {
+          dragged = true;
+          scheduler.pause();
+          playBtn.textContent = '▶';
+        }
+        if (dragged) {
+          const pxPerS = fallCanvas.clientHeight / 4; // = hauteur / LOOKAHEAD_S
+          seekTo(drag.t + dy / pxPerS); // le contenu suit le doigt
+        }
+      });
+      const endDrag = (): void => {
+        if (!drag) return;
+        if (!dragged) {
+          setPlaying(!scheduler.isPlaying);
+        } else if (drag.playing) {
+          scheduler.start();
+          playBtn.textContent = '⏸';
+        }
+        drag = null;
+      };
+      fallCanvas.addEventListener('pointerup', endDrag);
+      fallCanvas.addEventListener('pointercancel', endDrag);
+    }
 
     function tickMetronome(accent: boolean): void {
       const ctx = getAudioContext();

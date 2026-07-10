@@ -4,6 +4,7 @@ import { sampler } from '../../audio/sampler';
 import { progressStore } from '../../core/progress';
 import { navigate } from '../router';
 import { midiInput } from '../../input/midi-input';
+import { HAND_COLORS } from '../colors';
 
 export function renderFreePlay(el: HTMLElement): () => void {
   const settings = progressStore.getSettings();
@@ -39,7 +40,7 @@ export function renderFreePlay(el: HTMLElement): () => void {
   const noteOn = (midi: number, velocity = 0.85): void => {
     void sampler.ensureRunning();
     sampler.noteOn(midi, velocity);
-    kbd.setPressed(midi, midi < 60 ? 'var(--left-key, #3ddc84)' : '#4da3ff');
+    kbd.setPressed(midi, midi < 60 ? HAND_COLORS.left.main : HAND_COLORS.right.main);
     draw();
   };
   const noteOff = (midi: number): void => {

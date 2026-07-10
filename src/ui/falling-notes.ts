@@ -5,9 +5,11 @@ import type { KeyboardView } from './keyboard';
 const LOOKAHEAD_S = 4; // fenêtre visible au-dessus de la ligne d'impact
 const TRAIL_S = 0.6; // les notes continuent sous la ligne après impact
 
+import { HAND_COLORS, BAD_COLOR } from './colors';
+
 const COLORS = {
-  right: { white: '#4da3ff', black: '#2f7fd6' },
-  left: { white: '#3ddc84', black: '#27b368' },
+  right: { white: HAND_COLORS.right.main, black: HAND_COLORS.right.dark },
+  left: { white: HAND_COLORS.left.main, black: HAND_COLORS.left.dark },
 };
 
 /** Rendu Synthesia : rectangles alignés sur les touches, chute vers la ligne d'impact. */
@@ -65,15 +67,20 @@ export class FallingNotesView {
       const past = n.time < refTime - 0.05;
 
       ctx.globalAlpha = past ? 0.35 : 1;
-      let fill = isBlack ? pal.black : pal.white;
-      if (judgement === 'miss') fill = '#ff5f6b';
-      if (judgement === 'perfect' || judgement === 'good') fill = '#7be3a8';
+      let fill: string = isBlack ? pal.black : pal.white;
+      if (judgement === 'miss') fill = BAD_COLOR;
       ctx.fillStyle = fill;
       const x = rect.x + 1.5;
       const w = rect.w - 3;
       ctx.beginPath();
       ctx.roundRect(x, yTop, w, h, 5);
       ctx.fill();
+      if (judgement === 'perfect' || judgement === 'good') {
+        // note réussie : liseré blanc
+        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
       // liseré durée
       ctx.globalAlpha = past ? 0.15 : 0.4;
       ctx.fillStyle = '#ffffff';

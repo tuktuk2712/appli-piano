@@ -66,7 +66,7 @@ export class KeyboardView {
       if (!isBlackKey(m)) continue;
       const leftWhiteIdx = whites.findIndex((w) => w > m) - 1;
       if (leftWhiteIdx < 0) continue;
-      const bw = whiteW * 0.62;
+      const bw = whiteW * 0.56;
       this.keys.push({ midi: m, x: (leftWhiteIdx + 1) * whiteW - bw / 2, w: bw, black: true });
     }
   }
@@ -113,35 +113,57 @@ export class KeyboardView {
     const h = this.cssH;
     ctx.clearRect(0, 0, this.cssW, h);
 
+    // Blanches : léger dégradé ivoire, fine séparation, ombre portée sous le haut du clavier
+    const whiteGrad = ctx.createLinearGradient(0, 0, 0, h);
+    whiteGrad.addColorStop(0, '#d9dee6');
+    whiteGrad.addColorStop(0.06, '#f7f9fc');
+    whiteGrad.addColorStop(0.85, '#eef1f6');
+    whiteGrad.addColorStop(1, '#e2e6ed');
     for (const k of this.keys) {
       if (k.black) continue;
       const color = this.pressed.get(k.midi) ?? this.highlights.get(k.midi);
-      ctx.fillStyle = color ?? '#f2f4f8';
-      ctx.strokeStyle = '#1a1f28';
-      roundRect(ctx, k.x + 0.5, 0, k.w - 1, h - 1, [0, 0, 5, 5]);
+      ctx.fillStyle = color ?? whiteGrad;
+      roundRect(ctx, k.x + 0.75, 0, k.w - 1.5, h - 1, [0, 0, 4, 4]);
       ctx.fill();
-      ctx.stroke();
+      if (color) {
+        // touche enfoncée : léger assombrissement en bas pour un effet pressé
+        ctx.fillStyle = 'rgba(0,0,0,0.18)';
+        roundRect(ctx, k.x + 0.75, h * 0.82, k.w - 1.5, h * 0.18 - 1, [0, 0, 4, 4]);
+        ctx.fill();
+      }
       if (this.noteNames !== 'off' && k.midi % 12 === 0) {
-        ctx.fillStyle = color ? '#fff' : '#8a93a6';
-        ctx.font = `600 ${Math.min(13, k.w * 0.38)}px system-ui`;
+        ctx.fillStyle = color ? 'rgba(255,255,255,0.95)' : '#9aa3b5';
+        ctx.font = `600 ${Math.min(12, k.w * 0.34)}px system-ui`;
         ctx.textAlign = 'center';
-        ctx.fillText(noteName(k.midi, this.noteNames), k.x + k.w / 2, h - 8);
+        ctx.fillText(noteName(k.midi, this.noteNames), k.x + k.w / 2, h - 7);
       }
     }
 
+    // Noires : plus fines, dégradé profond, ombre portée
     const blackH = h * 0.62;
+    const blackGrad = ctx.createLinearGradient(0, 0, 0, blackH);
+    blackGrad.addColorStop(0, '#31363f');
+    blackGrad.addColorStop(0.12, '#171b22');
+    blackGrad.addColorStop(0.9, '#05070b');
+    blackGrad.addColorStop(1, '#22262e');
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.45)';
+    ctx.shadowBlur = 5;
+    ctx.shadowOffsetY = 2;
     for (const k of this.keys) {
       if (!k.black) continue;
       const color = this.pressed.get(k.midi) ?? this.highlights.get(k.midi);
-      ctx.fillStyle = color ?? '#12151c';
-      roundRect(ctx, k.x, 0, k.w, blackH, [0, 0, 4, 4]);
+      ctx.fillStyle = color ?? blackGrad;
+      roundRect(ctx, k.x, 0, k.w, blackH, [0, 0, 3.5, 3.5]);
       ctx.fill();
       if (!color) {
-        ctx.fillStyle = 'rgba(255,255,255,0.07)';
-        roundRect(ctx, k.x + 1.5, 0, k.w - 3, blackH * 0.5, [0, 0, 3, 3]);
+        // reflet discret sur le chant de la touche
+        ctx.fillStyle = 'rgba(255,255,255,0.10)';
+        roundRect(ctx, k.x + 1.5, blackH - 7, k.w - 3, 4, 2);
         ctx.fill();
       }
     }
+    ctx.restore();
   }
 }
 
