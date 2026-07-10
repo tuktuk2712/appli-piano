@@ -5,6 +5,7 @@ import { parseMusicXml, unzipMxl } from '../../core/musicxml-parser';
 import type { Song } from '../../core/song';
 import { navigate } from '../router';
 import { escapeHtml, toast } from '../dom';
+import { canInstall, onInstallChange, promptInstall } from '../install';
 
 const LEVEL_LABELS: Record<number, string> = {
   1: '🌱 Débutant',
@@ -18,6 +19,14 @@ export function renderHome(el: HTMLElement): () => void {
     <div class="screen">
       <h1>Piano Studio</h1>
       <p class="muted">Choisis un morceau et joue — au toucher, au micro ou en MIDI.</p>
+      <div id="hm-install" class="card" style="display:none;align-items:center;gap:12px">
+        <span style="font-size:1.5rem">📲</span>
+        <div class="song-info">
+          <div class="song-title">Installe l'application</div>
+          <div class="song-sub">Plein écran, hors-ligne, sur ton écran d'accueil</div>
+        </div>
+        <button class="btn" id="hm-install-btn">Installer</button>
+      </div>
       <input type="search" id="hm-search" placeholder="🔍 Rechercher un morceau…" />
       <div id="hm-list"><p class="muted">Chargement…</p></div>
       <h2>Mes morceaux importés</h2>
@@ -117,6 +126,19 @@ export function renderHome(el: HTMLElement): () => void {
 
   search.addEventListener('input', renderList);
 
+  // Bandeau d'installation PWA (visible seulement si Chrome propose l'installation)
+  const installCard = el.querySelector<HTMLElement>('#hm-install')!;
+  const syncInstall = (): void => {
+    installCard.style.display = canInstall() ? 'flex' : 'none';
+  };
+  syncInstall();
+  const offInstall = onInstallChange(syncInstall);
+  el.querySelector('#hm-install-btn')!.addEventListener('click', async () => {
+    const ok = await promptInstall();
+    if (ok) toast("📲 Installée ! Retrouve Piano Studio sur ton écran d'accueil");
+    syncInstall();
+  });
+
   el.querySelector<HTMLInputElement>('#hm-import')!.addEventListener('change', async function () {
     const file = this.files?.[0];
     this.value = '';
@@ -138,6 +160,7 @@ export function renderHome(el: HTMLElement): () => void {
 
   return () => {
     disposed = true;
+    offInstall();
   };
 }
 
