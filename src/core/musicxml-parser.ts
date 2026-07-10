@@ -67,9 +67,12 @@ export function parseMusicXml(xml: string, meta: ParseMeta = {}): Song {
           case 'attributes': {
             const div = el.querySelector('divisions');
             if (div) divisions = Number(div.textContent) || divisions;
-            const beats = el.querySelector('time > beats');
-            const beatType = el.querySelector('time > beat-type');
-            if (beats && beatType) timeSignature = [Number(beats.textContent), Number(beatType.textContent)];
+            const beats = Number(el.querySelector('time > beats')?.textContent);
+            const beatType = Number(el.querySelector('time > beat-type')?.textContent);
+            // les mesures composées ('3+2') donnent NaN : on garde la signature précédente
+            if (Number.isFinite(beats) && beats > 0 && Number.isFinite(beatType) && beatType > 0) {
+              timeSignature = [beats, beatType];
+            }
             if (Number(el.querySelector('staves')?.textContent) >= 2) hasStaves = true;
             break;
           }
@@ -133,19 +136,22 @@ export function parseMusicXml(xml: string, meta: ParseMeta = {}): Song {
   if (raw.length === 0) throw new Error('Aucune note trouvée dans le MusicXML');
   if (!bpm) bpm = 100;
 
-  // Fusion des liaisons : une note tie-stop prolonge la note tie-start correspondante.
+  // Fusion des liaisons : une note tie-stop CONTIGUË prolonge la note tie-start correspondante.
+  // Clé par hauteur seule (les liaisons cross-staff changent de main) ; un tie-start orphelin
+  // n'absorbe pas un tie-stop lointain grâce au test de contiguïté.
   const merged: RawNote[] = [];
-  const openTies = new Map<string, RawNote>(); // clé midi+hand
+  const openTies = new Map<number, RawNote>();
   for (const n of raw.sort((a, b) => a.startDiv - b.startDiv || a.midi - b.midi)) {
-    const key = `${n.midi}:${n.hand}`;
-    const open = openTies.get(key);
-    if (n.tieStop && open) {
+    const open = openTies.get(n.midi);
+    const contiguous = open && Math.abs(open.startDiv + open.beats - n.startDiv) < 1e-6;
+    if (n.tieStop && open && contiguous) {
       open.beats += n.beats;
-      if (!n.tieStart) openTies.delete(key);
+      if (!n.tieStart) openTies.delete(n.midi);
       continue;
     }
     merged.push(n);
-    if (n.tieStart) openTies.set(key, n);
+    if (n.tieStart) openTies.set(n.midi, n);
+    else if (open && !contiguous) openTies.delete(n.midi); // start orphelin périmé
   }
 
   const secPerBeat = 60 / bpm;
@@ -159,7 +165,6 @@ export function parseMusicXml(xml: string, meta: ParseMeta = {}): Song {
   }));
 
   const sorted = sortNotes(notes);
-  const last = sorted[sorted.length - 1];
   const title =
     meta.title ??
     doc.querySelector('work-title')?.textContent?.trim() ??
@@ -171,7 +176,7 @@ export function parseMusicXml(xml: string, meta: ParseMeta = {}): Song {
     title,
     level: meta.level ?? 2,
     notes: sorted,
-    duration: last.time + last.duration,
+    duration: sorted.reduce((max, n) => Math.max(max, n.time + n.duration), 0),
     bpm,
     timeSignature,
     musicXml: xml,

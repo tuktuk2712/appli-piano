@@ -35,13 +35,12 @@ export function parseMidi(data: ArrayBuffer, meta: ParseMeta = {}): Song {
   });
 
   const sorted = sortNotes(notes);
-  const last = sorted[sorted.length - 1];
   return {
     id: meta.id ?? `midi-${hashString(sorted.map((n) => `${n.midi}@${n.time.toFixed(3)}`).join())}`,
-    title: meta.title ?? midi.name ?? 'Morceau importé',
+    title: meta.title ?? (midi.name?.trim() || 'Morceau importé'),
     level: meta.level ?? 2,
     notes: sorted,
-    duration: last.time + last.duration,
+    duration: sorted.reduce((max, n) => Math.max(max, n.time + n.duration), 0),
     bpm: midi.header.tempos[0]?.bpm ?? 120,
     timeSignature: (midi.header.timeSignatures[0]?.timeSignature as [number, number]) ?? [4, 4],
   };

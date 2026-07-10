@@ -63,6 +63,23 @@ describe('detectExpected', () => {
     expect(detectExpected(now, prev, [64], loudNoise, FFT, SR, DEFAULT_DETECT_CFG)).toEqual([]);
   });
 
+  it("octave : les harmoniques d'une basse jouée ne valident pas l'octave attendue au-dessus", () => {
+    const prev = silentSpectrum();
+    const now = silentSpectrum();
+    addNote(now, 48); // seul Do3 est joué : ses harmoniques 2/4 tombent sur les bins de Do4
+    const got = detectExpected(now, prev, [48, 60], noise, FFT, SR, DEFAULT_DETECT_CFG);
+    expect(got).toEqual([48]);
+  });
+
+  it('octave : les deux notes réellement jouées sont toutes deux validées', () => {
+    const prev = silentSpectrum();
+    const now = silentSpectrum();
+    addNote(now, 48);
+    addNote(now, 60);
+    const got = detectExpected(now, prev, [48, 60], noise, FFT, SR, DEFAULT_DETECT_CFG);
+    expect(got.sort()).toEqual([48, 60]);
+  });
+
   it('accord : détecte les deux notes, ignore les non-attendues', () => {
     const prev = silentSpectrum();
     const now = silentSpectrum();

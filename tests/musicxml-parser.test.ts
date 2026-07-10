@@ -84,4 +84,29 @@ describe('parseMusicXml', () => {
   it('rejette un XML sans notes', () => {
     expect(() => parseMusicXml('<score-partwise></score-partwise>')).toThrow();
   });
+
+  it('mesure composée <beats>3+2</beats> : signature de repli finie (pas de NaN)', () => {
+    const xml = XML.replace('<beats>4</beats>', '<beats>3+2</beats>');
+    const song = parseMusicXml(xml);
+    expect(Number.isFinite(song.timeSignature[0])).toBe(true);
+    expect(song.timeSignature[0]).toBeGreaterThan(0);
+  });
+
+  it('un tie-start orphelin n absorbe pas un tie-stop lointain', () => {
+    const xml = `<?xml version="1.0"?>
+<score-partwise><part-list><score-part id="P1"/></part-list><part id="P1">
+  <measure number="1">
+    <attributes><divisions>1</divisions><time><beats>4</beats><beat-type>4</beat-type></time></attributes>
+    <note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><tie type="start"/></note>
+    <note><rest/><duration>3</duration></note>
+  </measure>
+  <measure number="2">
+    <note><rest/><duration>3</duration></note>
+    <note><pitch><step>C</step><octave>4</octave></pitch><duration>1</duration><tie type="stop"/></note>
+  </measure>
+</part></score-partwise>`;
+    const song = parseMusicXml(xml);
+    // non contiguës : deux notes distinctes, pas une fusion de 2 temps
+    expect(song.notes).toHaveLength(2);
+  });
 });

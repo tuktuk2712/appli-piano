@@ -1,11 +1,11 @@
-import { isBlackKey, type Song, type SongNote } from '../core/song';
+import { isBlackKey, lowerBound, measureSeconds, type Song, type SongNote } from '../core/song';
 import type { NoteJudgement } from '../core/matcher';
 import type { KeyboardView } from './keyboard';
+import { HAND_COLORS, BAD_COLOR } from './colors';
+import { pathRoundRect, resizeCanvasForDpr } from './dom';
 
 const LOOKAHEAD_S = 4; // fenêtre visible au-dessus de la ligne d'impact
 const TRAIL_S = 0.6; // les notes continuent sous la ligne après impact
-
-import { HAND_COLORS, BAD_COLOR } from './colors';
 
 const COLORS = {
   right: { white: HAND_COLORS.right.main, black: HAND_COLORS.right.dark },
@@ -20,22 +20,23 @@ export class FallingNotesView {
   private keyboard: KeyboardView;
   private cssW = 0;
   private cssH = 0;
+  private startIdx = 0; // curseur persistant : première note potentiellement visible
+  private lastTime = -Infinity;
+  private readonly maxDuration: number;
 
   constructor(canvas: HTMLCanvasElement, song: Song, keyboard: KeyboardView) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d')!;
     this.song = song;
     this.keyboard = keyboard;
+    this.maxDuration = song.notes.reduce((m, n) => Math.max(m, n.duration), 0);
     this.layout();
   }
 
   layout(): void {
-    const dpr = window.devicePixelRatio || 1;
-    this.cssW = this.canvas.clientWidth;
-    this.cssH = this.canvas.clientHeight;
-    this.canvas.width = Math.round(this.cssW * dpr);
-    this.canvas.height = Math.round(this.cssH * dpr);
-    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const size = resizeCanvasForDpr(this.canvas, this.ctx);
+    this.cssW = size.cssW;
+    this.cssH = size.cssH;
   }
 
   render(refTime: number, judgements: Map<SongNote, NoteJudgement>, waiting: boolean): void {
@@ -48,9 +49,17 @@ export class FallingNotesView {
 
     this.drawMeasureLines(refTime, impactY, pxPerS);
 
-    const t0 = refTime - TRAIL_S - 2; // marge pour les notes longues encore visibles
+    const t0 = refTime - TRAIL_S - 2; // marge pour les notes encore visibles sous la ligne
     const t1 = refTime + LOOKAHEAD_S;
-    for (const n of this.song.notes) {
+    const notes = this.song.notes;
+
+    // Curseur persistant : O(notes visibles) par frame au lieu de O(notes écoulées)
+    if (refTime < this.lastTime) this.startIdx = lowerBound(notes, t0 - this.maxDuration);
+    this.lastTime = refTime;
+    while (this.startIdx < notes.length && notes[this.startIdx].time < t0 - this.maxDuration) this.startIdx++;
+
+    for (let i = this.startIdx; i < notes.length; i++) {
+      const n = notes[i];
       if (n.time > t1) break;
       if (n.time + n.duration < t0) continue;
       const rect = this.keyboard.keyRect(n.midi);
@@ -72,8 +81,7 @@ export class FallingNotesView {
       ctx.fillStyle = fill;
       const x = rect.x + 1.5;
       const w = rect.w - 3;
-      ctx.beginPath();
-      ctx.roundRect(x, yTop, w, h, 5);
+      pathRoundRect(ctx, x, yTop, w, h, 5);
       ctx.fill();
       if (judgement === 'perfect' || judgement === 'good') {
         // note réussie : liseré blanc
@@ -84,8 +92,7 @@ export class FallingNotesView {
       // liseré durée
       ctx.globalAlpha = past ? 0.15 : 0.4;
       ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.roundRect(x + 1.5, yTop + 1.5, w - 3, Math.min(5, h * 0.2), 3);
+      pathRoundRect(ctx, x + 1.5, yTop + 1.5, w - 3, Math.min(5, h * 0.2), 3);
       ctx.fill();
       ctx.globalAlpha = 1;
     }
@@ -101,9 +108,7 @@ export class FallingNotesView {
 
   private drawMeasureLines(refTime: number, impactY: number, pxPerS: number): void {
     const ctx = this.ctx;
-    const beatsPerMeasure = this.song.timeSignature[0];
-    const measureS = (beatsPerMeasure * 60) / this.song.bpm;
-    if (measureS <= 0) return;
+    const measureS = measureSeconds(this.song); // toujours fini et > 0
     const first = Math.max(0, Math.floor(refTime / measureS));
     for (let i = first; ; i++) {
       const t = i * measureS;

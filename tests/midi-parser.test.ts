@@ -52,4 +52,19 @@ describe('parseMidi', () => {
   it('rejette un fichier invalide', () => {
     expect(() => parseMidi(new Uint8Array([1, 2, 3]).buffer as ArrayBuffer)).toThrow();
   });
+
+  it('duration = fin de la note qui finit le plus tard (pas la dernière qui commence)', () => {
+    const midi = new Midi();
+    const t = midi.addTrack();
+    t.addNote({ midi: 48, time: 0, duration: 4, velocity: 0.8 }); // tenue longue
+    t.addNote({ midi: 72, time: 2, duration: 0.5, velocity: 0.8 });
+    const arr = midi.toArray();
+    const song = parseMidi(arr.buffer.slice(arr.byteOffset, arr.byteOffset + arr.byteLength) as ArrayBuffer);
+    expect(song.duration).toBeCloseTo(4, 1);
+  });
+
+  it('nom de piste vide -> titre par défaut', () => {
+    const song = parseMidi(buildSingleTrackMidi());
+    expect(song.title).toBe('Morceau importé');
+  });
 });

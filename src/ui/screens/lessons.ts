@@ -5,6 +5,7 @@ import { KeyboardView } from '../keyboard';
 import { attachTouchKeys } from '../../input/touch-keys';
 import { sampler } from '../../audio/sampler';
 import { midiInput } from '../../input/midi-input';
+import { toast } from '../dom';
 
 export function renderLessons(el: HTMLElement, params: URLSearchParams): () => void {
   const lessonId = params.get('id');
@@ -93,10 +94,12 @@ function renderLesson(el: HTMLElement, lesson: Lesson): () => void {
 function runQuiz(host: HTMLElement, items: QuizItem[], onDone: () => void): () => void {
   let idx = 0;
   let cleanupItem: (() => void) | null = null;
+  let nextTimer = 0;
 
   function show(): void {
     cleanupItem?.();
     cleanupItem = null;
+    if (!host.isConnected) return; // l'écran a été démonté entre-temps
     const item = items[idx];
     if (!item) {
       onDone();
@@ -107,14 +110,10 @@ function runQuiz(host: HTMLElement, items: QuizItem[], onDone: () => void): () =
   }
 
   function feedbackAndNext(ok: boolean, extra = ''): void {
-    const f = document.createElement('div');
-    f.className = 'toast';
-    f.textContent = ok ? '✅ Bravo !' : `❌ ${extra}`;
-    document.body.appendChild(f);
-    setTimeout(() => f.remove(), 1400);
+    toast(ok ? '✅ Bravo !' : `❌ ${extra}`, 1400);
     if (ok) {
       idx++;
-      setTimeout(show, 650);
+      nextTimer = window.setTimeout(show, 650);
     }
   }
 
@@ -182,5 +181,8 @@ function runQuiz(host: HTMLElement, items: QuizItem[], onDone: () => void): () =
   }
 
   show();
-  return () => cleanupItem?.();
+  return () => {
+    clearTimeout(nextTimer);
+    cleanupItem?.();
+  };
 }

@@ -1,5 +1,5 @@
 import { getSongById } from '../../data/library';
-import { midiRange, notesInWindow, type Song, type SongNote } from '../../core/song';
+import { lowerBound, measureSeconds, midiRange, notesInWindow, type Song, type SongNote } from '../../core/song';
 import { PlaybackScheduler } from '../../core/scheduler';
 import { NoteMatcher, type NoteJudgement } from '../../core/matcher';
 import { progressStore } from '../../core/progress';
@@ -12,12 +12,15 @@ import { FallingNotesView } from '../falling-notes';
 import type { SheetView } from '../sheet-view';
 import { showResults } from '../results';
 import { navigate } from '../router';
-import { getAudioContext } from '../../audio/context';
+import { beep } from '../../audio/context';
 import { HAND_COLORS, BAD_COLOR } from '../colors';
+import { escapeHtml, toast } from '../dom';
 
 type Hands = 'left' | 'right' | 'both';
 const TEMPO_STEPS = [0.5, 0.75, 1, 1.25, 1.5];
 const HAND_LABELS: Record<Hands, string> = { both: '🙌 2 mains', right: '👉 Droite', left: '👈 Gauche' };
+/** Fenêtre d'anticipation : une note jouée un peu en avance est déjà connue du matcher. */
+const EXPECT_AHEAD_S = 0.25;
 
 export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () => void {
   const id = params.get('id') ?? '';
@@ -121,6 +124,10 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
     let finished = false;
     let raf = 0;
     let lastBeat = -1;
+    let disposedS = false; // la session est démontée : ignorer les promesses en vol
+    let expectIdx = 0; // pointeur d'anticipation dans song.notes (notes annoncées au matcher)
+    let lastMicKey = '';
+    let lastSeekVal = -1;
     const judgements = new Map<SongNote, NoteJudgement>();
     const autoOffTimers = new Set<number>();
 
@@ -146,15 +153,19 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
       waitMode,
       hands,
       loop,
+      // Les notes pratiquées sont annoncées au matcher EN AVANCE par le pointeur d'anticipation
+      // (boucle de rendu) ; onNotesDue ne sert qu'à faire jouer l'app au bon instant.
       onNotesDue: (notes) => {
         for (const n of notes) {
           const practiced = !listen && (hands === 'both' || n.hand === hands);
-          if (practiced) {
-            matcher.expect([n], n.time);
-          } else {
-            autoPlay(n);
-          }
+          if (!practiced) autoPlay(n);
         }
+      },
+      // Rebouclage A-B : purger les attentes sans toucher aux stats du passage
+      onSeek: (t) => {
+        matcher.clearPending();
+        judgements.clear();
+        resetExpect(t);
       },
       onEnd: () => {
         if (finished) return;
@@ -170,6 +181,11 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
         }
       },
     });
+
+    /** Repositionne le pointeur d'anticipation (après seek ou changement de main/écoute). */
+    function resetExpect(t: number): void {
+      expectIdx = lowerBound(song.notes, t);
+    }
 
     function autoPlay(n: SongNote): void {
       sampler.noteOn(n.midi, n.velocity * 0.75);
@@ -222,18 +238,32 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
     });
     const offMic = micListener.onNote((m) => onPlayerNote(m, 'mic'));
 
-    if (!sampler.isLoaded) void sampler.load();
+    if (!sampler.isLoaded) {
+      sampler.load().catch(() => toast('🔇 Son indisponible — vérifie ta connexion puis réessaie'));
+    }
 
     // ----- boucle de rendu -----
     const frame = (now: number): void => {
       scheduler.tick(now);
       const t = scheduler.time;
 
+      // Anticipation : annoncer au matcher les notes pratiquées à venir (fenêtre 250 ms),
+      // pour qu'une note jouée légèrement en avance soit jugée dans la tolérance.
+      const horizon = t + EXPECT_AHEAD_S;
+      while (expectIdx < song.notes.length && song.notes[expectIdx].time <= horizon) {
+        const n = song.notes[expectIdx++];
+        if (!listen && (hands === 'both' || n.hand === hands)) matcher.expect([n], n.time);
+      }
+
       for (const ev of matcher.sweep(t)) judgements.set(ev.note!, 'miss');
 
       if (micOn) {
         const pend = matcher.expectedMidis();
-        micListener.setExpected(pend);
+        const key = pend.join(',');
+        if (key !== lastMicKey) {
+          lastMicKey = key;
+          micListener.setExpected(pend);
+        }
       }
 
       if (metronome && scheduler.isPlaying && !scheduler.waiting) {
@@ -241,22 +271,27 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
         const beat = Math.floor(t / beatS);
         if (beat !== lastBeat) {
           lastBeat = beat;
-          tickMetronome(beat % song.timeSignature[0] === 0);
+          beep(beat % song.timeSignature[0] === 0 ? 1200 : 800);
         }
       }
 
-      // Illumination des touches : notes en train de sonner (bleu droite, vert gauche)
-      kbd.clearHighlights();
+      // Illumination des touches : notes en train de sonner (vert droite, bleu gauche)
+      const lit: [number, string][] = [];
       for (const n of notesInWindow(song, Math.max(0, t - 12), t + 0.001)) {
         if (n.time <= t && t < n.time + n.duration) {
-          kbd.setHighlight(n.midi, HAND_COLORS[n.hand].main);
+          lit.push([n.midi, HAND_COLORS[n.hand].main]);
         }
       }
+      kbd.setHighlights(lit);
 
       if (mode === 'fall') fallView.render(t, judgements, scheduler.waiting);
       else sheetView?.setCursorTime(t);
       kbd.draw();
-      seekBar.value = String(t);
+      const sv = Math.round(t * 10) / 10;
+      if (sv !== lastSeekVal) {
+        lastSeekVal = sv;
+        seekBar.value = String(sv); // écrire le slider 10×/s au lieu de 60×/s
+      }
       raf = requestAnimationFrame(frame);
     };
     raf = requestAnimationFrame(frame);
@@ -275,11 +310,17 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
     }
     playBtn.addEventListener('click', () => setPlaying(!scheduler.isPlaying));
 
+    function closeResults(): void {
+      stage.querySelector('.results-overlay')?.remove();
+    }
+
     function restart(): void {
+      closeResults();
       finished = false;
       matcher.reset();
       judgements.clear();
       scheduler.seek(0);
+      resetExpect(0);
       scheduler.start();
       playBtn.textContent = '⏸';
     }
@@ -291,7 +332,7 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
       this.classList.toggle('active', listen);
       // en écoute, le mode attente est suspendu sinon la lecture se fige sur la première note
       scheduler.setOptions({ waitMode: listen ? false : waitMode });
-      restartFrom(scheduler.time);
+      softReset();
       if (listen && !scheduler.isPlaying) setPlaying(true);
     });
 
@@ -311,7 +352,7 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
       hands = hands === 'both' ? 'right' : hands === 'right' ? 'left' : 'both';
       this.textContent = HAND_LABELS[hands];
       scheduler.setOptions({ hands });
-      restartFrom(scheduler.time);
+      softReset();
     });
 
     $('#ln-loop').addEventListener('click', function (this: HTMLElement) {
@@ -354,28 +395,53 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
       banner.textContent = '🎤 Calibration… silence 1,5 s (ne joue pas)';
       micListener
         .start()
-        .then(() => micListener.calibrate())
         .then(() => {
+          if (disposedS) return; // sorti de l'écran pendant la permission : tout couper
+          return micListener.calibrate();
+        })
+        .then(() => {
+          if (disposedS) {
+            micListener.stop();
+            return;
+          }
           micOn = true;
+          lastMicKey = '';
           micBtn.classList.add('active');
           banner.hidden = true;
           toast('🎤 Micro prêt — joue sur ton piano !');
         })
         .catch(() => {
+          if (disposedS) return;
           banner.hidden = true;
           toast('❌ Micro refusé — vérifie les autorisations');
         });
     });
 
+    let sheetLoading = false;
     async function openSheet(): Promise<void> {
-      if (sheetView || !song.musicXml) return;
-      const { SheetView } = await import('../sheet-view'); // OSMD chargé à la demande (~1 Mo)
-      sheetView = new SheetView();
-      await sheetView.load($('#ln-sheet'), song);
-      sheetView.onMeasureClick((t) => {
-        seekTo(t);
-        toast(`Mesure ${Math.round(t / ((song.timeSignature[0] * 60) / song.bpm)) + 1}`);
-      });
+      if (sheetView || sheetLoading || !song.musicXml) return;
+      sheetLoading = true;
+      try {
+        const { SheetView } = await import('../sheet-view'); // OSMD chargé à la demande (~1 Mo)
+        if (disposedS) return;
+        const container = host.querySelector<HTMLElement>('#ln-sheet');
+        if (!container) return;
+        const sv = new SheetView();
+        await sv.load(container, song);
+        if (disposedS) return;
+        sv.onMeasureClick((t) => {
+          seekTo(t);
+          toast(`Mesure ${Math.round(t / measureSeconds(song)) + 1}`);
+        });
+        sheetView = sv; // assigné seulement une fois complètement chargé (retry possible sinon)
+      } catch {
+        if (!disposedS) {
+          toast('❌ Partition indisponible pour ce morceau');
+          if (mode === 'sheet') $('#ln-mode').click(); // rebascule en cascade
+        }
+      } finally {
+        sheetLoading = false;
+      }
     }
     $('#ln-mode').addEventListener('click', function (this: HTMLElement) {
       mode = mode === 'fall' ? 'sheet' : 'fall';
@@ -387,17 +453,22 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
     });
     if (mode === 'sheet') void openSheet();
 
-    function restartFrom(t: number): void {
-      matcher.reset();
-      scheduler.seek(t);
+    /** Changement de main/écoute en place : purge les attentes SANS toucher stats ni portes franchies. */
+    function softReset(): void {
+      matcher.clearPending();
+      resetExpect(scheduler.time + 0.01);
     }
 
+    /** Repositionnement volontaire : nouvel essai depuis t (stats remises à zéro). */
     function seekTo(t: number): void {
+      closeResults();
       matcher.reset();
       judgements.clear();
       finished = false;
       scheduler.seek(Math.max(0, Math.min(song.duration, t)));
-      seekBar.value = String(scheduler.time);
+      resetExpect(scheduler.time);
+      lastSeekVal = Math.round(scheduler.time * 10) / 10;
+      seekBar.value = String(lastSeekVal);
     }
 
     seekBar.addEventListener('input', () => seekTo(Number(seekBar.value)));
@@ -444,26 +515,6 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
       fallCanvas.addEventListener('pointercancel', endDrag);
     }
 
-    function tickMetronome(accent: boolean): void {
-      const ctx = getAudioContext();
-      const osc = ctx.createOscillator();
-      const g = ctx.createGain();
-      osc.frequency.value = accent ? 1200 : 800;
-      g.gain.setValueAtTime(0.25, ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
-      osc.connect(g).connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.07);
-    }
-
-    function toast(msg: string): void {
-      const t = document.createElement('div');
-      t.className = 'toast';
-      t.textContent = msg;
-      document.body.appendChild(t);
-      setTimeout(() => t.remove(), 2600);
-    }
-
     const onResize = (): void => {
       kbd.layout();
       fallView.layout();
@@ -472,6 +523,7 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
     requestAnimationFrame(onResize);
 
     return () => {
+      disposedS = true;
       cancelAnimationFrame(raf);
       detachTouch();
       offMidi();
@@ -483,8 +535,4 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
       window.removeEventListener('resize', onResize);
     };
   }
-}
-
-function escapeHtml(s: string): string {
-  return s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 }

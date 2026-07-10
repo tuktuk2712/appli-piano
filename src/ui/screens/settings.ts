@@ -1,6 +1,7 @@
 import { progressStore } from '../../core/progress';
 import { midiInput } from '../../input/midi-input';
-import { getAudioContext, ensureAudioRunning } from '../../audio/context';
+import { getAudioContext, ensureAudioRunning, beep } from '../../audio/context';
+import { toast } from '../dom';
 
 export function renderSettings(el: HTMLElement): () => void {
   const s = progressStore.getSettings();
@@ -68,14 +69,7 @@ export function renderSettings(el: HTMLElement): () => void {
     const ctx = getAudioContext();
     for (let i = 0; i < 4; i++) {
       const t = ctx.currentTime + 0.8 + i;
-      const osc = ctx.createOscillator();
-      const g = ctx.createGain();
-      osc.frequency.value = 880;
-      g.gain.setValueAtTime(0.3, t);
-      g.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
-      osc.connect(g).connect(ctx.destination);
-      osc.start(t);
-      osc.stop(t + 0.1);
+      beep(880, t, 0.3, 0.1);
       beeps.push(performance.now() + (t - ctx.currentTime) * 1000);
     }
     setTimeout(() => {
@@ -116,11 +110,7 @@ export function renderSettings(el: HTMLElement): () => void {
     if (confirm('Effacer toute la progression (scores, étoiles, leçons) ?')) {
       progressStore.resetProgress();
       progressStore.saveSettings({ lessonsDone: [] });
-      const t = document.createElement('div');
-      t.className = 'toast';
-      t.textContent = 'Progression réinitialisée';
-      document.body.appendChild(t);
-      setTimeout(() => t.remove(), 2000);
+      toast('Progression réinitialisée', 2000);
     }
   });
 

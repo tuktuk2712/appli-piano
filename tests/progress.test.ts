@@ -40,7 +40,7 @@ describe('ProgressStore', () => {
     store.saveSettings({ noteNames: 'en', latencyMs: 120 });
     expect(store.getSettings().noteNames).toBe('en');
     expect(store.getSettings().latencyMs).toBe(120);
-    expect(store.getSettings().micEnabled).toBe(DEFAULT_SETTINGS.micEnabled);
+    expect(store.getSettings().metronome).toBe(DEFAULT_SETTINGS.metronome);
   });
 
   it('survit à un JSON corrompu', () => {

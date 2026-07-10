@@ -24,19 +24,34 @@ export function sortNotes(notes: SongNote[]): SongNote[] {
   return [...notes].sort((a, b) => a.time - b.time || a.midi - b.midi);
 }
 
-/** Notes dont time ∈ [t0, t1), par recherche binaire sur le tableau trié. */
-export function notesInWindow(song: Song, t0: number, t1: number): SongNote[] {
-  const notes = song.notes;
+/** Premier index i tel que notes[i].time >= t (recherche binaire, tableau trié). */
+export function lowerBound(notes: SongNote[], t: number): number {
   let lo = 0;
   let hi = notes.length;
   while (lo < hi) {
     const mid = (lo + hi) >> 1;
-    if (notes[mid].time < t0) lo = mid + 1;
+    if (notes[mid].time < t) lo = mid + 1;
     else hi = mid;
   }
+  return lo;
+}
+
+/** Notes dont time ∈ [t0, t1), par recherche binaire sur le tableau trié. */
+export function notesInWindow(song: Song, t0: number, t1: number): SongNote[] {
+  const notes = song.notes;
   const out: SongNote[] = [];
-  for (let i = lo; i < notes.length && notes[i].time < t1; i++) out.push(notes[i]);
+  for (let i = lowerBound(notes, t0); i < notes.length && notes[i].time < t1; i++) out.push(notes[i]);
   return out;
+}
+
+/** Durée d'une mesure en secondes — toujours finie et positive, même sur données invalides. */
+export function measureSeconds(song: Song): number {
+  const beats = song.timeSignature?.[0];
+  const bpm = song.bpm;
+  if (!Number.isFinite(beats) || beats <= 0 || !Number.isFinite(bpm) || bpm <= 0) {
+    return 4 * (60 / 100);
+  }
+  return (beats * 60) / bpm;
 }
 
 const NAMES_FR = ['Do', 'Do♯', 'Ré', 'Ré♯', 'Mi', 'Fa', 'Fa♯', 'Sol', 'Sol♯', 'La', 'La♯', 'Si'];

@@ -58,8 +58,19 @@ export class NoteMatcher {
     return { note: null, judgement: 'wrong', deltaMs: bestDelta === Infinity ? 0 : bestDelta };
   }
 
+  private static readonly NO_EVENTS: MatchEvent[] = [];
+
   /** Marque 'miss' les notes attendues dont la fenêtre est expirée. */
   sweep(atRefTime: number): MatchEvent[] {
+    // chemin rapide sans allocation : rien d'expiré (cas de ~99 % des frames)
+    let any = false;
+    for (const p of this.pending) {
+      if ((atRefTime - p.expectedAt) * 1000 > this.toleranceMs) {
+        any = true;
+        break;
+      }
+    }
+    if (!any) return NoteMatcher.NO_EVENTS;
     const out: MatchEvent[] = [];
     this.pending = this.pending.filter((p) => {
       if ((atRefTime - p.expectedAt) * 1000 > this.toleranceMs) {
@@ -75,6 +86,11 @@ export class NoteMatcher {
   /** Midis actuellement attendus (pour cibler la détection micro). */
   expectedMidis(): number[] {
     return [...new Set(this.pending.map((p) => p.note.midi))];
+  }
+
+  /** Purge les notes en attente SANS toucher aux stats (seek, rebouclage, changement de main). */
+  clearPending(): void {
+    this.pending = [];
   }
 
   reset(): void {

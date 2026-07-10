@@ -7,20 +7,16 @@ export interface SongProgress {
 }
 
 export interface Settings {
-  micEnabled: boolean;
   latencyMs: number;
   noteNames: 'fr' | 'en' | 'off';
   metronome: boolean;
-  micCalibrated: boolean;
   lessonsDone: string[];
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  micEnabled: true,
   latencyMs: 0,
   noteNames: 'fr',
   metronome: false,
-  micCalibrated: false,
   lessonsDone: [],
 };
 

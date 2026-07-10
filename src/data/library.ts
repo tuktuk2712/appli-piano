@@ -11,7 +11,17 @@ export interface LibraryEntry {
 }
 
 let indexCache: LibraryEntry[] | null = null;
+// Petit LRU : les Song gardent leur musicXml complet, inutile d'en retenir des dizaines en RAM
 const songCache = new Map<string, Song>();
+const CACHE_MAX = 4;
+
+function cacheSong(id: string, song: Song): void {
+  songCache.delete(id);
+  songCache.set(id, song);
+  while (songCache.size > CACHE_MAX) {
+    songCache.delete(songCache.keys().next().value as string);
+  }
+}
 
 export async function loadLibrary(): Promise<LibraryEntry[]> {
   if (indexCache) return indexCache;
@@ -29,7 +39,7 @@ export async function getSongById(id: string): Promise<Song | null> {
     const res = await fetch(`${import.meta.env.BASE_URL}library/${entry.file}`);
     if (!res.ok) throw new Error(`Morceau ${id} introuvable`);
     const song = parseMusicXml(await res.text(), { id: entry.id, title: entry.title, level: entry.level });
-    songCache.set(id, song);
+    cacheSong(id, song);
     return song;
   }
   const user = await listUserSongs().catch(() => [] as Song[]);

@@ -1,4 +1,4 @@
-import type { Song, SongNote } from './song';
+import { lowerBound, type Song, type SongNote } from './song';
 
 export interface SchedulerOpts {
   song: Song;
@@ -8,7 +8,12 @@ export interface SchedulerOpts {
   hands: 'left' | 'right' | 'both';
   onNotesDue(notes: SongNote[]): void;
   onEnd(): void;
+  /** Appelé quand le scheduler saute de lui-même (rebouclage A-B) : la session doit purger son état. */
+  onSeek?(t: number): void;
 }
+
+/** Plafond d'avancée par tick : un onglet suspendu (rAF gelé) ne fait pas sauter la lecture au retour. */
+const MAX_TICK_S = 0.25;
 
 interface Gate {
   time: number;
@@ -32,6 +37,12 @@ export class PlaybackScheduler {
   private gateIdx = 0;
   private pending = new Set<number>();
   private isWaiting = false;
+  private passedGateTime = -Infinity; // dernière porte franchie : ne jamais la réarmer
+
+  private firstGateIndex(t: number): number {
+    const i = this.gates.findIndex((g) => g.time >= t && g.time > this.passedGateTime + 1e-6);
+    return i < 0 ? this.gates.length : i;
+  }
 
   constructor(opts: SchedulerOpts) {
     this.opts = opts;
@@ -55,8 +66,7 @@ export class PlaybackScheduler {
     Object.assign(this.opts, patch);
     if ('waitMode' in patch || 'hands' in patch) {
       this.rebuildGates();
-      this.gateIdx = this.gates.findIndex((g) => g.time >= this.refTime - GROUP_WINDOW);
-      if (this.gateIdx < 0) this.gateIdx = this.gates.length;
+      this.gateIdx = this.firstGateIndex(this.refTime);
       this.isWaiting = false;
       this.pending.clear();
     }
@@ -80,10 +90,9 @@ export class PlaybackScheduler {
 
   seek(t: number): void {
     this.refTime = t;
-    this.nextIdx = this.opts.song.notes.findIndex((n) => n.time >= t);
-    if (this.nextIdx < 0) this.nextIdx = this.opts.song.notes.length;
-    this.gateIdx = this.gates.findIndex((g) => g.time >= t);
-    if (this.gateIdx < 0) this.gateIdx = this.gates.length;
+    this.nextIdx = lowerBound(this.opts.song.notes, t);
+    this.passedGateTime = -Infinity;
+    this.gateIdx = this.firstGateIndex(t);
     this.isWaiting = false;
     this.pending.clear();
     this.ended = false;
@@ -106,6 +115,7 @@ export class PlaybackScheduler {
     this.pending.delete(midi);
     if (this.pending.size === 0) {
       this.isWaiting = false;
+      this.passedGateTime = this.gates[this.gateIdx]?.time ?? this.refTime;
       this.gateIdx++;
     }
   }
@@ -116,7 +126,7 @@ export class PlaybackScheduler {
       if (this.playing) this.emitDue();
       return;
     }
-    const dt = (nowMs - this.lastNow) / 1000;
+    const dt = Math.min((nowMs - this.lastNow) / 1000, MAX_TICK_S);
     this.lastNow = nowMs;
     if (!this.playing || this.ended || this.isWaiting) return;
 
@@ -138,6 +148,7 @@ export class PlaybackScheduler {
       const len = loop[1] - loop[0];
       const wrapped = loop[0] + (len > 0 ? (target - loop[1]) % len : 0);
       this.seek(wrapped);
+      this.opts.onSeek?.(wrapped); // la session doit purger matcher/jugements
       this.emitDue();
       return;
     }

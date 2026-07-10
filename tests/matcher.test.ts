@@ -53,6 +53,17 @@ describe('NoteMatcher', () => {
     expect(m.expectedMidis()).toEqual([60]);
   });
 
+  it('clearPending purge les attentes mais garde les stats', () => {
+    const m = new NoteMatcher({});
+    m.expect([n(60, 1.0)], 1.0);
+    m.playerNote(60, 1.0);
+    m.expect([n(64, 2.0)], 2.0);
+    m.clearPending();
+    expect(m.expectedMidis()).toEqual([]);
+    expect(m.stats.perfect).toBe(1);
+    expect(m.sweep(10)).toEqual([]); // rien à expirer
+  });
+
   it('note jouée sans rien d attendu = wrong', () => {
     const m = new NoteMatcher({});
     expect(m.playerNote(60, 0.5)!.judgement).toBe('wrong');

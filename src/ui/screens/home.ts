@@ -4,6 +4,7 @@ import { parseMidi } from '../../core/midi-parser';
 import { parseMusicXml, unzipMxl } from '../../core/musicxml-parser';
 import type { Song } from '../../core/song';
 import { navigate } from '../router';
+import { escapeHtml, toast } from '../dom';
 
 const LEVEL_LABELS: Record<number, string> = {
   1: '🌱 Débutant',
@@ -50,10 +51,11 @@ export function renderHome(el: HTMLElement): () => void {
   }
 
   function card(id: string, title: string, sub: string, deletable = false): string {
-    return `<div class="card song-card" data-id="${id}">
-      <div class="song-info"><div class="song-title">${title}</div><div class="song-sub">${sub}</div></div>
+    // title vient du nom de fichier pour les imports : échappement obligatoire
+    return `<div class="card song-card" data-id="${escapeHtml(id)}">
+      <div class="song-info"><div class="song-title">${escapeHtml(title)}</div><div class="song-sub">${escapeHtml(sub)}</div></div>
       ${starsHtml(id)}
-      ${deletable ? `<button class="song-del" data-del="${id}" title="Supprimer">🗑</button>` : ''}
+      ${deletable ? `<button class="song-del" data-del="${escapeHtml(id)}" title="Supprimer">🗑</button>` : ''}
     </div>`;
   }
 
@@ -128,11 +130,7 @@ export function renderHome(el: HTMLElement): () => void {
       renderUser();
       navigate('learn', { id: song.id });
     } catch (err) {
-      const t = document.createElement('div');
-      t.className = 'toast';
-      t.textContent = `❌ Import impossible : ${err instanceof Error ? err.message : 'fichier invalide'}`;
-      document.body.appendChild(t);
-      setTimeout(() => t.remove(), 4000);
+      toast(`❌ Import impossible : ${err instanceof Error ? err.message : 'fichier invalide'}`, 4000);
     }
   });
 

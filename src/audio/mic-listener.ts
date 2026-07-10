@@ -19,27 +19,44 @@ export class MicListener {
   private expected: number[] = [];
   private lastFired = new Map<number, number>();
   private cbs = new Set<(midi: number) => void>();
+  private session = 0; // incrémenté par stop() : annule tout start() encore en vol
+  private starting = false;
 
   get running(): boolean {
     return this.timer !== null;
   }
 
   async start(): Promise<void> {
-    if (this.running) return;
-    await ensureAudioRunning();
-    this.stream = await navigator.mediaDevices.getUserMedia({
-      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
-    });
-    const ctx = getAudioContext();
-    const src = ctx.createMediaStreamSource(this.stream);
-    this.analyser = ctx.createAnalyser();
-    this.analyser.fftSize = FFT_SIZE;
-    this.analyser.smoothingTimeConstant = 0;
-    src.connect(this.analyser);
-    this.timer = window.setInterval(() => this.poll(), POLL_MS);
+    if (this.running || this.starting) return;
+    this.starting = true;
+    const mySession = ++this.session;
+    try {
+      await ensureAudioRunning();
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+      });
+      if (mySession !== this.session) {
+        // stop() est passé pendant la demande de permission : libérer tout de suite
+        stream.getTracks().forEach((t) => t.stop());
+        return;
+      }
+      this.stream = stream;
+      const ctx = getAudioContext();
+      const src = ctx.createMediaStreamSource(stream);
+      this.analyser = ctx.createAnalyser();
+      this.analyser.fftSize = FFT_SIZE;
+      this.analyser.smoothingTimeConstant = 0;
+      src.connect(this.analyser);
+      this.expected = []; // session fraîche : rien d'attendu tant que l'écran n'a rien fourni
+      this.lastFired.clear();
+      this.timer = window.setInterval(() => this.poll(), POLL_MS);
+    } finally {
+      this.starting = false;
+    }
   }
 
   stop(): void {
+    this.session++;
     if (this.timer !== null) {
       clearInterval(this.timer);
       this.timer = null;
@@ -47,6 +64,8 @@ export class MicListener {
     this.stream?.getTracks().forEach((t) => t.stop());
     this.stream = null;
     this.analyser = null;
+    this.expected = [];
+    this.lastFired.clear();
   }
 
   setExpected(midis: number[]): void {

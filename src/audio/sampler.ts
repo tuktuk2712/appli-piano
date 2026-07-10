@@ -28,7 +28,15 @@ export class PianoSampler {
 
   load(onProgress?: (ratio: number) => void): Promise<void> {
     if (this.loading) return this.loading;
-    this.loading = (async () => {
+    this.loading = this.doLoad(onProgress).catch((err) => {
+      this.loading = null; // échec réseau : le prochain load() retentera au lieu de rester muet
+      throw err;
+    });
+    return this.loading;
+  }
+
+  private doLoad(onProgress?: (ratio: number) => void): Promise<void> {
+    return (async () => {
       const ctx = getAudioContext();
       this.master = ctx.createGain();
       this.master.gain.value = 0.9;
@@ -45,7 +53,6 @@ export class PianoSampler {
       );
       this.loaded = true;
     })();
-    return this.loading;
   }
 
   async ensureRunning(): Promise<void> {

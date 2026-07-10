@@ -1,5 +1,5 @@
 import { OpenSheetMusicDisplay } from 'opensheetmusicdisplay';
-import type { Song } from '../core/song';
+import { measureSeconds, type Song } from '../core/song';
 
 interface CursorStep {
   time: number; // secondes de référence
@@ -51,7 +51,7 @@ export class SheetView {
     this.stepIdx = 0;
 
     // Temps de début de chaque mesure : d'après les notes, sinon au prorata (tempo constant)
-    const measureSec = (song.timeSignature[0] * 60) / song.bpm;
+    const measureSec = measureSeconds(song);
     const lastMeasure = Math.max(1, ...song.notes.map((n) => n.measure ?? 0), Math.ceil(song.duration / measureSec));
     this.measureTimes = Array.from({ length: lastMeasure }, (_, i) => i * measureSec);
     for (const n of song.notes) {

@@ -8,9 +8,10 @@ export interface DetectConfig {
   onsetDb: number; // montée minimale entre deux trames pour compter une attaque
   marginDb: number; // marge au-dessus du bruit de fond
   harmonics: number; // nombre d'harmoniques considérées (fondamentale incluse)
+  octaveGapDb: number; // écart max toléré sous l'octave inférieure (anti faux positif d'octave)
 }
 
-export const DEFAULT_DETECT_CFG: DetectConfig = { onsetDb: 8, marginDb: 12, harmonics: 4 };
+export const DEFAULT_DETECT_CFG: DetectConfig = { onsetDb: 8, marginDb: 12, harmonics: 4, octaveGapDb: 4 };
 
 export function midiToFreq(midi: number): number {
   return 440 * Math.pow(2, (midi - 69) / 12);
@@ -73,5 +74,14 @@ export function detectExpected(
     const floor = noteEnergy(noiseFloor, midi, fftSize, sampleRate, cfg.harmonics);
     if (now - before >= cfg.onsetDb && now >= floor + cfg.marginDb) out.push(midi);
   }
-  return out;
+  // Anti faux positif d'octave : les harmoniques de Do3 recouvrent exactement celles de Do4.
+  // Si l'octave inférieure est aussi attendue et nettement plus forte, la note haute
+  // n'est probablement qu'un reflet — on la rejette.
+  return out.filter((midi) => {
+    const lower = midi - 12;
+    if (!expected.includes(lower)) return true;
+    const eHigh = noteEnergy(spectrum, midi, fftSize, sampleRate, cfg.harmonics);
+    const eLow = noteEnergy(spectrum, lower, fftSize, sampleRate, cfg.harmonics);
+    return eHigh >= eLow - cfg.octaveGapDb;
+  });
 }
