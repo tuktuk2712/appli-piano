@@ -46,17 +46,28 @@ if ($pdfs.Count -eq 0) { Write-Host "Aucun PDF trouvé dans $Chemin" -Foreground
 $outDir = Join-Path (Split-Path $pdfs[0].FullName -Parent) 'converties'
 New-Item -ItemType Directory -Force $outDir | Out-Null
 
+function Convert-One([System.IO.FileInfo]$pdf, [string]$outDir, [string]$audiveris) {
+  & $audiveris -batch -export -output $outDir $pdf.FullName | Out-Null
+  $mxl = Join-Path $outDir ($pdf.BaseName + '.mxl')
+  if (-not (Test-Path $mxl)) {
+    # Audiveris peut créer un sous-dossier par partition selon la version
+    $found = Get-ChildItem $outDir -Recurse -Filter ($pdf.BaseName + '*.mxl') -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($found) { $mxl = $found.FullName }
+  }
+  if (Test-Path $mxl) { return $mxl }
+  return $null
+}
+
 $ok = 0
 foreach ($pdf in $pdfs) {
   Write-Host "Conversion de $($pdf.Name)... (1 à 3 min par page)" -ForegroundColor Cyan
-  & $audiveris -batch -export -output $outDir $pdf.FullName
-  $mxl = Join-Path $outDir ($pdf.BaseName + '.mxl')
-  # Audiveris peut créer un sous-dossier par partition selon la version
-  if (-not (Test-Path $mxl)) {
-    $found = Get-ChildItem $outDir -Recurse -Filter ($pdf.BaseName + '*.mxl') | Select-Object -First 1
-    if ($found) { $mxl = $found.FullName }
+  $mxl = Convert-One $pdf $outDir $audiveris
+  if (-not $mxl) {
+    # le tout premier lancement d'Audiveris peut échouer pendant son initialisation : on retente une fois
+    Write-Host "  Nouvelle tentative..." -ForegroundColor Yellow
+    $mxl = Convert-One $pdf $outDir $audiveris
   }
-  if (Test-Path $mxl) {
+  if ($mxl) {
     Write-Host "  OK -> $mxl" -ForegroundColor Green
     $ok++
   } else {
