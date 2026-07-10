@@ -71,9 +71,10 @@ export class PianoSampler {
     comp.release.value = 0.18;
 
     const reverb = ctx.createConvolver();
-    reverb.buffer = makeImpulseResponse(ctx, 1.9, 3.2);
+    // IR courte : la convolution coûte proportionnellement à sa longueur (CPU mobile)
+    reverb.buffer = makeImpulseResponse(ctx, 1.1, 2.8);
     const wet = ctx.createGain();
-    wet.gain.value = 0.16; // réverbération discrète, "salon avec un vrai piano"
+    wet.gain.value = 0.14; // réverbération discrète, "salon avec un vrai piano"
 
     this.master.connect(comp);
     this.master.connect(reverb);
@@ -122,9 +123,15 @@ export class PianoSampler {
   }
 
   noteOff(midi: number): void {
+    // Ne relâcher que la voix la PLUS ANCIENNE de cette hauteur : si deux notes
+    // identiques se chevauchent, l'arrêt de la première ne coupe plus la seconde.
+    let oldest: Voice | null = null;
     for (const v of this.voices) {
-      if (v.midi === midi && !v.released) this.releaseVoice(v, RELEASE_S);
+      if (v.midi === midi && !v.released && (!oldest || v.startedAt < oldest.startedAt)) {
+        oldest = v;
+      }
     }
+    if (oldest) this.releaseVoice(oldest, RELEASE_S);
   }
 
   allOff(): void {

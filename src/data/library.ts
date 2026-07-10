@@ -1,5 +1,6 @@
 import { parseMusicXml } from '../core/musicxml-parser';
 import { listUserSongs } from '../core/progress';
+import { smoothSong } from '../core/quantize';
 import type { Song } from '../core/song';
 
 export interface LibraryEntry {
@@ -45,5 +46,7 @@ export async function getSongById(id: string): Promise<Song | null> {
     return song;
   }
   const user = await listUserSongs().catch(() => [] as Song[]);
-  return user.find((s) => s.id === id) ?? null;
+  const found = user.find((s) => s.id === id);
+  // Les imports (MIDI enregistrés, PDF convertis) passent par le lisseur — idempotent
+  return found ? smoothSong(found) : null;
 }
