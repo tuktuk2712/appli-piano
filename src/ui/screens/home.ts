@@ -40,6 +40,14 @@ export function renderHome(el: HTMLElement): () => void {
         <button class="btn" id="hm-install-btn">Installer</button>
       </div>
       <input type="search" id="hm-search" placeholder="🔍 Rechercher un morceau…" />
+      <div class="card song-card" id="hm-identify">
+        <span style="font-size:1.5rem">🔎</span>
+        <div class="song-info">
+          <div class="song-title">Quel est ce morceau ?</div>
+          <div class="song-sub">Joue quelques notes, l'app devine le titre</div>
+        </div>
+        <span>›</span>
+      </div>
       <div id="hm-list"><p class="muted">Chargement…</p></div>
       <h2>Mes morceaux importés</h2>
       <div id="hm-user"></div>
@@ -137,6 +145,7 @@ export function renderHome(el: HTMLElement): () => void {
     .catch(() => (userList.innerHTML = ''));
 
   search.addEventListener('input', renderList);
+  el.querySelector('#hm-identify')!.addEventListener('click', () => navigate('identify'));
 
   // Fichier partagé depuis une autre app Android (OneDrive, Fichiers…)
   pickupSharedFile()

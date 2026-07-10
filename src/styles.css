@@ -35,9 +35,11 @@ html, body {
   -webkit-overflow-scrolling: touch;
 }
 
-#app[data-screen='learn'], #app[data-screen='free'] { overflow: hidden; }
-body:has(#app[data-screen='learn']) #nav, body:has(#app[data-screen='free']) #nav { display: none; }
-body:has(#app[data-screen='learn']) #app, body:has(#app[data-screen='free']) #app { inset: 0; }
+#app[data-screen='learn'], #app[data-screen='free'], #app[data-screen='identify'] { overflow: hidden; }
+body:has(#app[data-screen='learn']) #nav, body:has(#app[data-screen='free']) #nav,
+body:has(#app[data-screen='identify']) #nav { display: none; }
+body:has(#app[data-screen='learn']) #app, body:has(#app[data-screen='free']) #app,
+body:has(#app[data-screen='identify']) #app { inset: 0; }
 
 #nav {
   position: fixed;

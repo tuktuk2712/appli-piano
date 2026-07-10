@@ -2,7 +2,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { songToMusicXml } from './lib/musicxml-gen.mjs';
+import { songToMusicXml, songOpeningMidis } from './lib/musicxml-gen.mjs';
 import level1 from './songs/level1.mjs';
 import level2 from './songs/level2.mjs';
 import level3 from './songs/level3.mjs';
@@ -20,7 +20,14 @@ for (const song of all) {
   const xml = songToMusicXml(song);
   const file = `${song.id}.musicxml`;
   writeFileSync(join(OUT, file), xml, 'utf8');
-  index.push({ id: song.id, title: song.title, composer: song.composer, level: song.level, file });
+  index.push({
+    id: song.id,
+    title: song.title,
+    composer: song.composer,
+    level: song.level,
+    file,
+    opening: songOpeningMidis(song), // empreinte mélodique pour le mode reconnaissance
+  });
 }
 
 writeFileSync(join(OUT, 'index.json'), JSON.stringify(index, null, 2), 'utf8');

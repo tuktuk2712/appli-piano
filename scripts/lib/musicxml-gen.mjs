@@ -71,6 +71,22 @@ function handXml(measTokens, staff) {
   return out.join('\n');
 }
 
+const STEP_SEMI = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+
+/** Empreinte mélodique : les n premières notes de la main droite (la plus aiguë des accords). */
+export function songOpeningMidis(song, n = 20) {
+  const out = [];
+  for (const measure of parseHand(song.right)) {
+    for (const t of measure) {
+      if (t.rest) continue;
+      const midi = Math.max(...t.pitches.map((p) => (p.octave + 1) * 12 + STEP_SEMI[p.step] + p.alter));
+      out.push(midi);
+      if (out.length >= n) return out;
+    }
+  }
+  return out;
+}
+
 /**
  * @param {{id:string,title:string,composer:string,level:1|2|3,bpm:number,time:[number,number],right:string,left:string}} song
  * @returns {string} MusicXML

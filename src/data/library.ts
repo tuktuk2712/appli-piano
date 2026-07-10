@@ -8,6 +8,8 @@ export interface LibraryEntry {
   composer: string;
   level: 1 | 2 | 3;
   file: string;
+  /** Empreinte mélodique (premières notes) pour le mode reconnaissance. */
+  opening?: number[];
 }
 
 let indexCache: LibraryEntry[] | null = null;

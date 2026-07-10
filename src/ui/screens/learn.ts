@@ -74,6 +74,7 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
           <canvas id="ln-fall" ${mode === 'sheet' ? 'hidden' : ''}></canvas>
           <div id="ln-sheet" class="sheet-host" ${mode === 'fall' ? 'hidden' : ''}></div>
           <div id="ln-banner" class="learn-banner" hidden></div>
+          <div id="ln-count" class="learn-count" hidden></div>
         </div>
         <canvas id="ln-kbd"></canvas>
       </div>`;
@@ -98,6 +99,10 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
       .learn-banner { position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
         background: var(--bg-3); border: 1px solid #333d4d; padding: 8px 16px; border-radius: 999px;
         z-index: 5; font-size: 0.85rem; white-space: nowrap; }
+      .learn-count { position: absolute; inset: 0; display: flex; align-items: center;
+        justify-content: center; font-size: clamp(80px, 30vh, 200px); font-weight: 800;
+        color: var(--gold); text-shadow: 0 0 40px rgba(255,207,92,0.4); z-index: 8;
+        pointer-events: none; }
       #ln-kbd { height: clamp(110px, 22vh, 190px); width: 100%; touch-action: none; flex-shrink: 0; }
       @media (max-height: 520px) {
         #ln-kbd { height: clamp(80px, 26vh, 120px); }
@@ -173,7 +178,10 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
         setPlaying(false);
         if (!listen) {
           showResults(stage, song.id, matcher.stats, {
-            onReplay: () => restart(),
+            onReplay: () => {
+              seekTo(0);
+              setPlaying(true); // repart avec le décompte
+            },
             onExit: () => navigate('home'),
           });
         } else {
@@ -298,17 +306,51 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
 
     // ----- contrôles -----
     const playBtn = $<HTMLButtonElement>('#ln-play');
+    const countEl = $<HTMLElement>('#ln-count');
+    let countTimers: number[] = [];
+
+    /** Décompte en rythme : une mesure de métronome au tempo choisi, puis la lecture part. */
+    function startWithCountIn(): void {
+      cancelCountIn();
+      void sampler.ensureRunning();
+      const beats = Math.max(2, song.timeSignature[0]);
+      const beatMs = (60 / song.bpm / TEMPO_STEPS[speedIdx]) * 1000;
+      playBtn.textContent = '⏸';
+      for (let i = 0; i < beats; i++) {
+        countTimers.push(
+          window.setTimeout(() => {
+            beep(i === 0 ? 1200 : 800);
+            countEl.textContent = String(beats - i);
+            countEl.hidden = false;
+          }, i * beatMs),
+        );
+      }
+      countTimers.push(
+        window.setTimeout(() => {
+          countEl.hidden = true;
+          countTimers = [];
+          if (finished) restart();
+          else scheduler.start();
+        }, beats * beatMs),
+      );
+    }
+
+    function cancelCountIn(): void {
+      countTimers.forEach((t) => clearTimeout(t));
+      countTimers = [];
+      countEl.hidden = true;
+    }
+
     function setPlaying(on: boolean): void {
       if (on) {
-        void sampler.ensureRunning();
-        if (finished) restart();
-        else scheduler.start();
+        startWithCountIn();
       } else {
+        cancelCountIn();
         scheduler.pause();
+        playBtn.textContent = '▶';
       }
-      playBtn.textContent = on ? '⏸' : '▶';
     }
-    playBtn.addEventListener('click', () => setPlaying(!scheduler.isPlaying));
+    playBtn.addEventListener('click', () => setPlaying(!(scheduler.isPlaying || countTimers.length > 0)));
 
     function closeResults(): void {
       stage.querySelector('.results-overlay')?.remove();
@@ -512,7 +554,7 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
       const endDrag = (): void => {
         if (!drag) return;
         if (!dragged) {
-          setPlaying(!scheduler.isPlaying);
+          setPlaying(!(scheduler.isPlaying || countTimers.length > 0));
         } else if (drag.playing) {
           scheduler.start();
           playBtn.textContent = '⏸';
@@ -532,6 +574,7 @@ export function renderLearnScreen(el: HTMLElement, params: URLSearchParams): () 
 
     return () => {
       disposedS = true;
+      cancelCountIn();
       cancelAnimationFrame(raf);
       detachTouch();
       offMidi();
