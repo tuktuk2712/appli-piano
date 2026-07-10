@@ -267,4 +267,40 @@ export default [
            F2:e C3:e F3:e A3:e G2:e D3:e G3:e B3:e |
            G2:e D3:e G3:e B3:e [C3 G3 C4]:h`,
   },
+  {
+    id: 'roi-de-la-montagne',
+    title: "Dans l'antre du roi de la montagne",
+    composer: 'E. Grieg',
+    level: 2,
+    bpm: 108,
+    time: [4, 4],
+    right: `A3:e B3:e C4:e D4:e E4:e C4:e E4:q | D#4:e B3:e D#4:q D4:e Bb3:e D4:q |
+            A3:e B3:e C4:e D4:e E4:e C4:e E4:q | G4:e E4:e G4:h r:q |
+            A4:e B4:e C5:e D5:e E5:e C5:e E5:q | D#5:e B4:e D#5:q D5:e Bb4:e D5:q |
+            A4:e B4:e C5:e D5:e E5:e C5:e E5:q | G5:e E5:e G5:h r:q |
+            A3:e B3:e C4:e D4:e E4:e C4:e E4:q | D#4:e B3:e D#4:q D4:e Bb3:e D4:q |
+            A4:e B4:e C5:e D5:e E5:e C5:e E5:q | A4:q E4:q A4:h`,
+    left: `[A2 E3]:q [A2 E3]:q [A2 E3]:q [A2 E3]:q | [A2 E3]:q [A2 E3]:q [A2 E3]:q [A2 E3]:q |
+           [A2 E3]:q [A2 E3]:q [A2 E3]:q [A2 E3]:q | [A2 E3]:q [A2 E3]:q [A2 E3]:q r:q |
+           [A2 E3]:q [A2 E3]:q [A2 E3]:q [A2 E3]:q | [A2 E3]:q [A2 E3]:q [A2 E3]:q [A2 E3]:q |
+           [A2 E3]:q [A2 E3]:q [A2 E3]:q [A2 E3]:q | [A2 E3]:q [A2 E3]:q [A2 E3]:q r:q |
+           [A2 E3]:q [A2 E3]:q [A2 E3]:q [A2 E3]:q | [A2 E3]:q [A2 E3]:q [A2 E3]:q [A2 E3]:q |
+           [A2 E3]:q [A2 E3]:q [A2 E3]:q [A2 E3]:q | [A2 E3]:q [A2 E3]:q [A2 E3]:h`,
+  },
+  {
+    id: 'je-te-veux',
+    title: 'Je te veux (thème)',
+    composer: 'E. Satie',
+    level: 2,
+    bpm: 66,
+    time: [3, 4],
+    right: `G4:q C5:q E5:q | G5:h E5:q | F5:q E5:q D5:q | E5:h C5:q |
+            D5:q C5:q B4:q | C5:h A4:q | B4:q A4:q G4:q | D5:h. |
+            G4:q C5:q E5:q | G5:h E5:q | A5:q G5:q F5:q | E5:h C5:q |
+            F5:q E5:q D5:q | D5:q C5:q B4:q | D5:h B4:q | C5:h.`,
+    left: `C3:q [E3 G3]:q [E3 G3]:q | C3:q [E3 G3]:q [E3 G3]:q | G2:q [D3 F3 B3]:q [D3 F3 B3]:q | C3:q [E3 G3]:q [E3 G3]:q |
+           G2:q [D3 F3 B3]:q [D3 F3 B3]:q | F2:q [F3 A3]:q [F3 A3]:q | G2:q [D3 F3 B3]:q [D3 F3 B3]:q | G2:q [D3 F3 B3]:q [D3 F3 B3]:q |
+           C3:q [E3 G3]:q [E3 G3]:q | C3:q [E3 G3]:q [E3 G3]:q | F2:q [F3 A3 C4]:q [F3 A3 C4]:q | C3:q [E3 G3]:q [E3 G3]:q |
+           D3:q [F3 A3]:q [F3 A3]:q | G2:q [D3 F3 B3]:q [D3 F3 B3]:q | G2:q [D3 F3 B3]:q [D3 F3 B3]:q | C3:q [E3 G3]:h`,
+  },
 ];

@@ -182,6 +182,20 @@
     "file": "ave-maria-schubert.musicxml"
   },
   {
+    "id": "roi-de-la-montagne",
+    "title": "Dans l'antre du roi de la montagne",
+    "composer": "E. Grieg",
+    "level": 2,
+    "file": "roi-de-la-montagne.musicxml"
+  },
+  {
+    "id": "je-te-veux",
+    "title": "Je te veux (thème)",
+    "composer": "E. Satie",
+    "level": 2,
+    "file": "je-te-veux.musicxml"
+  },
+  {
     "id": "gymnopedie-1",
     "title": "Gymnopédie n°1 (extrait)",
     "composer": "E. Satie",
@@ -250,5 +264,12 @@
     "composer": "W.A. Mozart",
     "level": 3,
     "file": "marche-turque.musicxml"
+  },
+  {
+    "id": "valse-la-mineur",
+    "title": "Valse en la mineur (B.150)",
+    "composer": "F. Chopin",
+    "level": 3,
+    "file": "valse-la-mineur.musicxml"
   }
 ]

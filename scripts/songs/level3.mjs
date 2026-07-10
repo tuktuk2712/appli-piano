@@ -189,4 +189,24 @@ export default [
            A2:q [E3 A3 C4]:q A2:q [E3 A3 C4]:q | A2:q [E3 A3 C4]:q E2:q [E3 A3 C4]:q |
            E2:q [E3 G#3 B3]:q A2:q [E3 A3 C4]:q | E2:q [E3 G#3 B3]:q [A2 E3 A3]:h`,
   },
+  {
+    id: 'valse-la-mineur',
+    title: 'Valse en la mineur (B.150)',
+    composer: 'F. Chopin',
+    level: 3,
+    bpm: 100,
+    time: [3, 4],
+    right: `E5:h C5:q | B4:q. C5:e B4:e A4:e | G#4:h B4:q | A4:h. |
+            E5:h C5:q | B4:q. C5:e B4:e A4:e | G#4:q B4:q D5:q | B4:h. |
+            A5:h E5:q | C5:q. D5:e C5:e B4:e | D5:h F5:q | D5:q. E5:e D5:e C5:e |
+            B4:h E5:q | G#4:q. A4:e B4:e G#4:e | A4:q B4:e C5:e B4:e A4:e | A4:h.`,
+    left: `A2:q [E3 A3 C4]:q [E3 A3 C4]:q | A2:q [E3 A3 C4]:q [E3 A3 C4]:q |
+           E2:q [E3 G#3 D4]:q [E3 G#3 D4]:q | A2:q [E3 A3 C4]:q [E3 A3 C4]:q |
+           A2:q [E3 A3 C4]:q [E3 A3 C4]:q | A2:q [E3 A3 C4]:q [E3 A3 C4]:q |
+           E2:q [E3 G#3 D4]:q [E3 G#3 D4]:q | E2:q [E3 G#3 B3]:q [E3 G#3 B3]:q |
+           A2:q [E3 A3 C4]:q [E3 A3 C4]:q | A2:q [E3 A3 C4]:q [E3 A3 C4]:q |
+           D3:q [F3 A3 D4]:q [F3 A3 D4]:q | D3:q [F3 A3 D4]:q [F3 A3 D4]:q |
+           E2:q [E3 G#3 D4]:q [E3 G#3 D4]:q | E2:q [E3 G#3 B3]:q [E3 G#3 B3]:q |
+           E2:q [E3 G#3 D4]:q [E3 G#3 D4]:q | [A2 E3 A3]:h.`,
+  },
 ];
