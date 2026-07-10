@@ -77,10 +77,122 @@
     "file": "fur-elise.musicxml"
   },
   {
+    "id": "canon-de-pachelbel",
+    "title": "Canon de Pachelbel",
+    "composer": "J. Pachelbel",
+    "level": 2,
+    "file": "canon-de-pachelbel.musicxml"
+  },
+  {
+    "id": "menuet-en-sol",
+    "title": "Menuet en Sol",
+    "composer": "C. Petzold (attr. Bach)",
+    "level": 2,
+    "file": "menuet-en-sol.musicxml"
+  },
+  {
+    "id": "greensleeves",
+    "title": "Greensleeves",
+    "composer": "Traditionnel anglais",
+    "level": 2,
+    "file": "greensleeves.musicxml"
+  },
+  {
+    "id": "amazing-grace",
+    "title": "Amazing Grace",
+    "composer": "Traditionnel",
+    "level": 2,
+    "file": "amazing-grace.musicxml"
+  },
+  {
+    "id": "scarborough-fair",
+    "title": "Scarborough Fair",
+    "composer": "Traditionnel",
+    "level": 2,
+    "file": "scarborough-fair.musicxml"
+  },
+  {
+    "id": "aura-lee",
+    "title": "Aura Lee (Love Me Tender)",
+    "composer": "G. Poulton",
+    "level": 2,
+    "file": "aura-lee.musicxml"
+  },
+  {
+    "id": "when-the-saints",
+    "title": "When the Saints Go Marching In",
+    "composer": "Traditionnel",
+    "level": 2,
+    "file": "when-the-saints.musicxml"
+  },
+  {
+    "id": "house-rising-sun",
+    "title": "House of the Rising Sun",
+    "composer": "Traditionnel",
+    "level": 2,
+    "file": "house-rising-sun.musicxml"
+  },
+  {
+    "id": "berceuse-brahms",
+    "title": "Berceuse",
+    "composer": "J. Brahms",
+    "level": 2,
+    "file": "berceuse-brahms.musicxml"
+  },
+  {
     "id": "gymnopedie-1",
     "title": "Gymnopédie n°1 (extrait)",
     "composer": "E. Satie",
     "level": 3,
     "file": "gymnopedie-1.musicxml"
+  },
+  {
+    "id": "prelude-do-majeur",
+    "title": "Prélude en Do (extrait)",
+    "composer": "J.S. Bach",
+    "level": 3,
+    "file": "prelude-do-majeur.musicxml"
+  },
+  {
+    "id": "clair-de-lune-debut",
+    "title": "Clair de lune (extrait)",
+    "composer": "C. Debussy",
+    "level": 3,
+    "file": "clair-de-lune-debut.musicxml"
+  },
+  {
+    "id": "prelude-chopin-4",
+    "title": "Prélude op.28 n°4 (simplifié)",
+    "composer": "F. Chopin",
+    "level": 3,
+    "file": "prelude-chopin-4.musicxml"
+  },
+  {
+    "id": "nocturne-chopin-9-2",
+    "title": "Nocturne op.9 n°2 (thème)",
+    "composer": "F. Chopin",
+    "level": 3,
+    "file": "nocturne-chopin-9-2.musicxml"
+  },
+  {
+    "id": "pathetique-2e-mvt",
+    "title": "Sonate Pathétique, 2e mvt (thème)",
+    "composer": "L. van Beethoven",
+    "level": 3,
+    "file": "pathetique-2e-mvt.musicxml"
+  },
+  {
+    "id": "danse-hongroise-5",
+    "title": "Danse hongroise n°5 (thème)",
+    "composer": "J. Brahms",
+    "level": 3,
+    "file": "danse-hongroise-5.musicxml"
+  },
+  {
+    "id": "ode-joie-variations",
+    "title": "Ode à la joie (avec accords)",
+    "composer": "L. van Beethoven",
+    "level": 3,
+    "file": "ode-joie-variations.musicxml"
   }
 ]
