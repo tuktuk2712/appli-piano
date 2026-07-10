@@ -26,7 +26,9 @@ export function renderHome(el: HTMLElement): () => void {
         📂 Importer un fichier (.mid, .musicxml, .mxl, .pdf)
         <input type="file" id="hm-import" accept=".mid,.midi,.xml,.musicxml,.mxl,.pdf" hidden />
       </label>
-      <p class="muted" style="font-size:0.8rem">Astuce : des milliers de partitions MusicXML gratuites sur musescore.com</p>
+      <p class="muted" style="font-size:0.8rem">Astuce : pour les musiques de films et morceaux modernes
+      (Interstellar, River Flows in You…), cherche « titre + MIDI » ou va sur musescore.com,
+      puis importe le fichier ici — il reste sur ton appareil.</p>
     </div>`;
 
   const style = document.createElement('style');

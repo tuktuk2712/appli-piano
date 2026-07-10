@@ -146,4 +146,47 @@ export default [
            C3:q E3:q G3:q E3:q | C3:q B2:q A2:q G2:q |
            A2:q F2:q G2:q C3:q | G2:q B2:q [C2 G2 C3]:h`,
   },
+  {
+    id: 'sonate-clair-de-lune',
+    title: 'Sonate au clair de lune, 1er mvt (extrait)',
+    composer: 'L. van Beethoven',
+    level: 3,
+    bpm: 54,
+    time: [4, 4],
+    right: `A3:e C4:e E4:e C4:e A3:e C4:e E4:e C4:e |
+            A3:e C4:e E4:e C4:e A3:e C4:e E4:e C4:e |
+            A3:e C4:e E4:e C4:e A3:e C4:e E4:e C4:e |
+            A3:e C4:e F4:e C4:e A3:e C4:e F4:e C4:e |
+            G#3:e B3:e E4:e B3:e G#3:e B3:e E4:e B3:e |
+            G#3:e B3:e E4:e B3:e G#3:e B3:e E4:e B3:e |
+            E5:q. E5:e E5:h | E5:q. E5:e E5:h | E5:q. E5:e F5:h |
+            E5:q. E5:e E5:h | C5:h B4:h | A4:w`,
+    left: `[A2 A3]:w | [A2 A3]:w | [G2 G3]:w | [F2 F3]:w | [E2 E3]:w | [E2 E3]:w |
+           A2:e E3:e A3:e C4:e E4:e C4:e A3:e E3:e |
+           A2:e E3:e A3:e C4:e E4:e C4:e A3:e E3:e |
+           F2:e C3:e F3:e A3:e C4:e A3:e F3:e C3:e |
+           E2:e B2:e E3:e G#3:e B3:e G#3:e E3:e B2:e |
+           E2:e B2:e E3:e G#3:e B3:e G#3:e E3:e B2:e |
+           [A2 E3 A3]:w`,
+  },
+  {
+    id: 'marche-turque',
+    title: 'Marche turque (thème)',
+    composer: 'W.A. Mozart',
+    level: 3,
+    bpm: 116,
+    time: [4, 4],
+    right: `B4:e A4:e G#4:e A4:e C5:q r:q | D5:e C5:e B4:e C5:e E5:q r:q |
+            F5:e E5:e D#5:e E5:e B5:e A5:e G#5:e A5:e | B5:e A5:e G#5:e A5:e C6:q r:q |
+            B4:e A4:e G#4:e A4:e C5:q r:q | D5:e C5:e B4:e C5:e E5:q r:q |
+            F5:e E5:e D#5:e E5:e B5:e A5:e G#5:e A5:e | C6:e B5:e A5:e G#5:e A5:q r:q |
+            B4:e A4:e G#4:e A4:e C5:q r:q | D5:e C5:e B4:e C5:e E5:q r:q |
+            F5:e E5:e D#5:e E5:e B5:e A5:e G#5:e A5:e | C6:e B5:e A5:e G#5:e [A4 C5 E5]:h`,
+    left: `A2:q [E3 A3 C4]:q A2:q [E3 A3 C4]:q | A2:q [E3 A3 C4]:q E2:q [E3 A3 C4]:q |
+           E2:q [E3 G#3 B3]:q A2:q [E3 A3 C4]:q | A2:q [E3 A3 C4]:q A2:q r:q |
+           A2:q [E3 A3 C4]:q A2:q [E3 A3 C4]:q | A2:q [E3 A3 C4]:q E2:q [E3 A3 C4]:q |
+           E2:q [E3 G#3 B3]:q A2:q [E3 A3 C4]:q | E2:q [E3 G#3 B3]:q A2:q r:q |
+           A2:q [E3 A3 C4]:q A2:q [E3 A3 C4]:q | A2:q [E3 A3 C4]:q E2:q [E3 A3 C4]:q |
+           E2:q [E3 G#3 B3]:q A2:q [E3 A3 C4]:q | E2:q [E3 G#3 B3]:q [A2 E3 A3]:h`,
+  },
 ];

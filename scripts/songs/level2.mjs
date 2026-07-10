@@ -160,4 +160,111 @@ export default [
            [G2 D3]:h. | [G2 D3]:h. | [G2 D3]:h. | [G2 D3]:q [C3 G3]:h | [C3 G3]:h. |
            [C3 G3]:h. | [C3 G3]:h. | [G2 D3]:h. | [G2 D3]:h. | [C3 G3]:h.`,
   },
+  {
+    id: 'the-entertainer',
+    title: 'The Entertainer (thème)',
+    composer: 'S. Joplin',
+    level: 2,
+    bpm: 80,
+    time: [4, 4],
+    right: `r:h r:q D4:e D#4:e |
+            E4:e C5:e E4:e C5:e E4:e C5:q. | C5:e D5:e D#5:e E5:e C5:e D5:e E5:q |
+            B4:e D5:e C5:h D4:e D#4:e |
+            E4:e C5:e E4:e C5:e E4:e C5:q. | C5:e D5:e D#5:e E5:e C5:e D5:e E5:q |
+            B4:e D5:e C5:h D4:e D#4:e |
+            E4:e C5:e E4:e C5:e E4:e C5:q. | C5:e D5:e D#5:e E5:e C5:e D5:e E5:q |
+            B4:e D5:e [E4 G4 C5]:h.`,
+    left: `r:w |
+           C3:q [E3 G3]:q G2:q [E3 G3]:q | C3:q [E3 G3]:q G2:q [E3 G3]:q |
+           G2:q [D3 F3 B3]:q C3:q [E3 G3]:q |
+           C3:q [E3 G3]:q G2:q [E3 G3]:q | C3:q [E3 G3]:q G2:q [E3 G3]:q |
+           G2:q [D3 F3 B3]:q C3:q [E3 G3]:q |
+           C3:q [E3 G3]:q G2:q [E3 G3]:q | C3:q [E3 G3]:q G2:q [E3 G3]:q |
+           G2:q [D3 F3 B3]:q [C3 G3]:h`,
+  },
+  {
+    id: 'lac-des-cygnes',
+    title: 'Le Lac des cygnes (thème)',
+    composer: 'P.I. Tchaïkovski',
+    level: 2,
+    bpm: 76,
+    time: [4, 4],
+    right: `E5:h A4:e B4:e C5:e D5:e | E5:h A4:e B4:e C5:e D5:e |
+            E5:q C5:e A4:e E5:q C5:e A4:e | F5:q D5:e A4:e F5:q D5:e A4:e |
+            E5:h A4:e B4:e C5:e D5:e | E5:h A4:e B4:e C5:e D5:e |
+            E5:q D5:q C5:q B4:q | A4:w`,
+    left: `A2:q E3:q A3:q E3:q | F2:q C3:q F3:q C3:q |
+           A2:q E3:q A3:q E3:q | D3:q F3:q A3:q F3:q |
+           A2:q E3:q A3:q E3:q | F2:q C3:q F3:q C3:q |
+           E2:q B2:q E3:q G#3:q | [A2 E3 A3]:w`,
+  },
+  {
+    id: 'gnossienne-1',
+    title: 'Gnossienne n°1 (extrait)',
+    composer: 'E. Satie',
+    level: 2,
+    bpm: 60,
+    time: [4, 4],
+    right: `r:w | r:w |
+            A4:h Bb4:e A4:e G#4:e A4:e | F4:q E4:q D4:h |
+            E4:e F4:e E4:e D4:e C#4:e D4:e E4:q | D4:h. r:q |
+            A4:h Bb4:e A4:e G#4:e A4:e | F4:q E4:q D4:h |
+            E4:e F4:e E4:e D4:e C#4:e D4:e E4:q | D4:w`,
+    left: `D3:q [F3 A3]:h. | A2:q [E3 A3]:h. |
+           D3:q [F3 A3]:h. | A2:q [E3 A3]:h. |
+           A2:q [E3 A3 C#4]:h. | D3:q [F3 A3]:h. |
+           D3:q [F3 A3]:h. | A2:q [E3 A3]:h. |
+           A2:q [E3 A3 C#4]:h. | [D2 A2 D3]:w`,
+  },
+  {
+    id: 'matin-grieg',
+    title: 'Matin (Peer Gynt)',
+    composer: 'E. Grieg',
+    level: 2,
+    bpm: 72,
+    time: [4, 4],
+    right: `G4:e E4:e D4:e C4:e D4:e E4:q. | G4:e E4:e D4:e C4:e D4:e E4:q. |
+            A4:e F4:e E4:e D4:e E4:e F4:q. | G4:e E4:e D4:e C4:e D4:e E4:q. |
+            B4:e G4:e F#4:e E4:e F#4:e G4:q. | A4:e F4:e E4:e D4:e E4:e F4:q. |
+            G4:e E4:e D4:e C4:e D4:e E4:q. | E4:q D4:q C4:h`,
+    left: `[C3 G3]:w | [C3 E3 G3]:w | [D3 F3 A3]:w | [C3 E3 G3]:w |
+           [E3 G3 B3]:w | [D3 F3 A3]:w | [C3 E3 G3]:w | [G2 D3]:h [C3 G3]:h`,
+  },
+  {
+    id: 'le-cygne',
+    title: 'Le Cygne (extrait)',
+    composer: 'C. Saint-Saëns',
+    level: 2,
+    bpm: 60,
+    time: [4, 4],
+    right: `E5:w | D5:q C5:q B4:h | C5:h A4:h | G4:w |
+            E5:h F5:h | G5:h. E5:q | F5:q E5:q D5:h | E5:h D5:h | C5:w`,
+    left: `C3:e G3:e C4:e E4:e C4:e G3:e E3:e G3:e |
+           G2:e D3:e G3:e B3:e D4:e B3:e G3:e D3:e |
+           A2:e E3:e A3:e C4:e E4:e C4:e A3:e E3:e |
+           C3:e G3:e C4:e E4:e C4:e G3:e C4:e E4:e |
+           C3:e G3:e C4:e E4:e F2:e C3:e F3:e A3:e |
+           C3:e G3:e C4:e E4:e C4:e G3:e C4:e E4:e |
+           D3:e A3:e D4:e F4:e G2:e D3:e G3:e B3:e |
+           C3:e G3:e C4:e E4:e G2:e D3:e G3:e B3:e |
+           C3:e G3:e C4:e E4:e [C3 G3 C4]:h`,
+  },
+  {
+    id: 'ave-maria-schubert',
+    title: 'Ave Maria (thème)',
+    composer: 'F. Schubert',
+    level: 2,
+    bpm: 60,
+    time: [4, 4],
+    right: `G4:h. G4:q | A4:q G4:e F#4:e G4:h | C5:q. B4:e A4:q C5:q | B4:q A4:q G4:h |
+            G4:h. G4:q | A4:q G4:e F#4:e G4:h | A4:q G4:q F4:q E4:q | D4:h C4:h`,
+    left: `C3:e E3:e G3:e C4:e G3:e E3:e G3:e C4:e |
+           G2:e D3:e G3:e B3:e D4:e B3:e G3:e D3:e |
+           F2:e C3:e F3:e A3:e C4:e A3:e F3:e C3:e |
+           G2:e D3:e G3:e B3:e D4:e B3:e G3:e D3:e |
+           C3:e E3:e G3:e C4:e G3:e E3:e G3:e C4:e |
+           G2:e D3:e G3:e B3:e D4:e B3:e G3:e D3:e |
+           F2:e C3:e F3:e A3:e G2:e D3:e G3:e B3:e |
+           G2:e D3:e G3:e B3:e [C3 G3 C4]:h`,
+  },
 ];

@@ -140,6 +140,48 @@
     "file": "berceuse-brahms.musicxml"
   },
   {
+    "id": "the-entertainer",
+    "title": "The Entertainer (thème)",
+    "composer": "S. Joplin",
+    "level": 2,
+    "file": "the-entertainer.musicxml"
+  },
+  {
+    "id": "lac-des-cygnes",
+    "title": "Le Lac des cygnes (thème)",
+    "composer": "P.I. Tchaïkovski",
+    "level": 2,
+    "file": "lac-des-cygnes.musicxml"
+  },
+  {
+    "id": "gnossienne-1",
+    "title": "Gnossienne n°1 (extrait)",
+    "composer": "E. Satie",
+    "level": 2,
+    "file": "gnossienne-1.musicxml"
+  },
+  {
+    "id": "matin-grieg",
+    "title": "Matin (Peer Gynt)",
+    "composer": "E. Grieg",
+    "level": 2,
+    "file": "matin-grieg.musicxml"
+  },
+  {
+    "id": "le-cygne",
+    "title": "Le Cygne (extrait)",
+    "composer": "C. Saint-Saëns",
+    "level": 2,
+    "file": "le-cygne.musicxml"
+  },
+  {
+    "id": "ave-maria-schubert",
+    "title": "Ave Maria (thème)",
+    "composer": "F. Schubert",
+    "level": 2,
+    "file": "ave-maria-schubert.musicxml"
+  },
+  {
     "id": "gymnopedie-1",
     "title": "Gymnopédie n°1 (extrait)",
     "composer": "E. Satie",
@@ -194,5 +236,19 @@
     "composer": "L. van Beethoven",
     "level": 3,
     "file": "ode-joie-variations.musicxml"
+  },
+  {
+    "id": "sonate-clair-de-lune",
+    "title": "Sonate au clair de lune, 1er mvt (extrait)",
+    "composer": "L. van Beethoven",
+    "level": 3,
+    "file": "sonate-clair-de-lune.musicxml"
+  },
+  {
+    "id": "marche-turque",
+    "title": "Marche turque (thème)",
+    "composer": "W.A. Mozart",
+    "level": 3,
+    "file": "marche-turque.musicxml"
   }
 ]
