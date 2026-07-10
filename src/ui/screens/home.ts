@@ -22,8 +22,8 @@ export function renderHome(el: HTMLElement): () => void {
       <h2>Mes morceaux importés</h2>
       <div id="hm-user"></div>
       <label class="btn ghost" style="display:inline-block">
-        📂 Importer un fichier (.mid, .musicxml, .mxl)
-        <input type="file" id="hm-import" accept=".mid,.midi,.xml,.musicxml,.mxl" hidden />
+        📂 Importer un fichier (.mid, .musicxml, .mxl, .pdf)
+        <input type="file" id="hm-import" accept=".mid,.midi,.xml,.musicxml,.mxl,.pdf" hidden />
       </label>
       <p class="muted" style="font-size:0.8rem">Astuce : des milliers de partitions MusicXML gratuites sur musescore.com</p>
     </div>`;
@@ -117,6 +117,10 @@ export function renderHome(el: HTMLElement): () => void {
     const file = this.files?.[0];
     this.value = '';
     if (!file) return;
+    if (file.name.toLowerCase().endsWith('.pdf')) {
+      showPdfHelp(el);
+      return;
+    }
     try {
       const song = await importFile(file);
       await saveUserSong(song);
@@ -135,6 +139,45 @@ export function renderHome(el: HTMLElement): () => void {
   return () => {
     disposed = true;
   };
+}
+
+/** Un PDF est une image de partition : il faut une reconnaissance optique (OMR), trop lourde pour le téléphone. */
+function showPdfHelp(host: HTMLElement): void {
+  const overlay = document.createElement('div');
+  overlay.className = 'pdf-help-overlay';
+  overlay.innerHTML = `
+    <div class="pdf-help-card">
+      <h2 style="margin:0 0 10px">📄 Partition PDF détectée</h2>
+      <p class="muted" style="margin-top:0">Un PDF est une <b>image</b> : il doit être converti en vraies notes
+      (MusicXML) par reconnaissance optique. C'est trop lourd pour un téléphone, mais tu as deux solutions :</p>
+      <div class="card" style="margin-bottom:8px">
+        <b>1. Le plus simple : MuseScore</b>
+        <p class="muted" style="margin:6px 0 8px">Ton morceau existe sûrement déjà en MusicXML —
+        cherche son titre puis télécharge en « MusicXML » et importe-le ici.</p>
+        <a class="btn ghost" style="text-decoration:none;display:inline-block;color:var(--text)" href="https://musescore.com/sheetmusic" target="_blank" rel="noopener">🔍 Chercher sur musescore.com</a>
+      </div>
+      <div class="card" style="margin-bottom:12px">
+        <b>2. Convertir le PDF sur ton PC (gratuit)</b>
+        <p class="muted" style="margin:6px 0 0">Sur ton ordinateur, dans le dossier du projet :</p>
+        <code style="display:block;background:var(--bg);padding:8px 10px;border-radius:8px;margin:8px 0;font-size:0.78rem;overflow-x:auto">.\\scripts\\convert-pdf.ps1 ma-partition.pdf</code>
+        <p class="muted" style="margin:0">Le script installe <b>Audiveris</b> (le meilleur convertisseur open source)
+        et produit un fichier <b>.mxl</b> à importer ici.</p>
+      </div>
+      <button class="btn" id="pdf-help-close" style="width:100%">Compris</button>
+    </div>`;
+  const style = document.createElement('style');
+  style.textContent = `
+    .pdf-help-overlay { position: fixed; inset: 0; background: rgba(10,12,16,0.85); z-index: 40;
+      display: flex; align-items: center; justify-content: center; padding: 16px; animation: toast-in 0.25s ease; }
+    .pdf-help-card { background: var(--bg-2); border: 1px solid #2a3342; border-radius: 18px;
+      padding: 20px; max-width: 480px; max-height: 90vh; overflow-y: auto; }
+  `;
+  overlay.appendChild(style);
+  overlay.querySelector('#pdf-help-close')!.addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.remove();
+  });
+  host.appendChild(overlay);
 }
 
 async function importFile(file: File): Promise<Song> {

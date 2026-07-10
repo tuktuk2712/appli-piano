@@ -36,6 +36,24 @@ calibration, puis joue. Astuce : pose le téléphone sur le piano, volume du pia
 carrée « TO HOST » à l'arrière). Branche, autorise le MIDI dans Chrome : bandeau
 « 🎹 MIDI connecté » — détection parfaite de chaque note, y compris les accords.
 
+## Convertir une partition PDF
+
+Un PDF est une image : il faut le convertir en MusicXML par reconnaissance optique (OMR).
+Sur ton PC, dans le dossier du projet :
+
+```powershell
+.\scripts\convert-pdf.ps1 chemin\vers\partition.pdf     # un fichier
+.\scripts\convert-pdf.ps1 chemin\vers\dossier\          # tous les PDF d'un dossier
+```
+
+Le script installe automatiquement [Audiveris](https://audiveris.github.io/audiveris/) (open
+source, le meilleur du domaine) et produit un `.mxl` dans le sous-dossier `converties\`.
+Envoie-le sur ton téléphone (Drive, mail…) et importe-le dans l'app : **Morceaux → Importer**.
+
+> Astuce : avant de convertir, cherche le morceau sur [musescore.com](https://musescore.com) —
+> il existe souvent déjà en MusicXML, prêt à importer. La qualité OMR dépend du scan : les PDF
+> « natifs » (exportés d'un logiciel) se convertissent très bien, les scans flous beaucoup moins.
+
 ## Développement
 
 ```bash
